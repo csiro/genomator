@@ -1,0 +1,72 @@
+/* This style defines the dimensions and spacing of an icon image within the footer */
+.icon-image {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
+
+/* Styling for the footer section */
+.footer {
+  background-color: #19404b;
+  margin-bottom: 0;
+  padding: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* To push content to the edges */
+}
+
+/* Styling for the text within the footer, like a quote or a message */
+.footer-quote {
+  color: #FFFFFF;
+  font-size: 1.1em;
+}
+
+/* Styling for the links within the footer section */
+.footer-links {
+  margin-top: 10px;
+}
+
+/* Styling for each individual link within the footer */
+.footer-links a {
+  color: #FFFFFF;
+  margin-right: 0px;
+  text-decoration: none;
+}
+
+/* Adding a separator (|) after each link, except the last one */
+.footer-links a:not(:last-child)::after {
+  content: " | ";
+  margin: -1px 10px 0;
+}
+
+/* Styling for the footer logo */
+.CSIRO_Logo {
+  width: 80px;
+  position: relative;
+  width: 80px; /* Adjust the width to your desired size */
+  height: auto; /* This ensures the aspect ratio is maintained */
+}
+
+/* Styling for the copyright information in the footer */
+.footer-copyright {
+  color: #FFFFFF;
+  font-size: 0.8em;
+  margin-top: 10px;
+}
+
+.logo {
+  text-align: end;
+}
+
+@media (max-width: 768px) {
+  /* Reduce the size of the logo and left-block for smaller screens */
+  .logo {
+    text-align: center; /* Center the logo */
+    
+  }
+
+  .left-block {
+    text-align: center; /* Center the content in the left-block */
+    margin-bottom: 1em;
+  }
+}

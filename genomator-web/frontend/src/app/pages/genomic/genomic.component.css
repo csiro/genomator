@@ -1,0 +1,206 @@
+
+
+
+
+/* Remove the fixed width for cards */
+.card {
+  padding-top: 2em;
+  padding-bottom: 2em;
+  margin: 0 auto;
+  flex-shrink: 0;
+  max-width: 80%; /* Set a maximum width as a percentage */
+  /* Add other styles if needed */
+}
+
+/* Media query for smaller screens (adjust the max-width as needed) */
+@media (min-width: auto) {
+  .card {
+    max-width: 1000px; /* Set the maximum width for larger screens */
+  }
+}
+
+
+.bullet-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.bullet-list li {
+  margin-left: 1em; /* Adjust this value for your preferred indentation */
+  text-indent: -1em; /* This will negate the indentation of the bullet point */
+}
+
+.bullet-list li:before {
+  content: "\2022"; /* Unicode character for bullet point */
+  font-size: 1.5em;
+  padding-right: 0.5em;
+  position: relative;
+  top: 0.1em;
+}
+
+
+.bullet-list2 {
+  list-style-type: none;
+  padding: 0;
+}
+
+.bullet-list2 li {
+  margin-left: 2em; /* Adjust this value for your preferred indentation */
+  text-indent: -1em; /* This will negate the indentation of the bullet point */
+}
+
+.bullet-list2 li:before {
+  content: "\2023"; /* Unicode character for bullet point */
+  font-size: 1.5em;
+  padding-right: 0.5em;
+  position: relative;
+  top: 0.1em;
+}
+
+
+
+.code-block  {
+  white-space: nowrap;
+  font-family: monospace;
+}
+
+
+
+
+
+
+
+
+
+.card-title-DataSubmission {
+  color: #000;
+  text-align: center;
+  font-family: Poppins;
+  font-size: 32px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.card-with-top-gap {
+  margin-top: 20px; /* Adjust this value to set the desired top gap */
+}
+
+.card-title-HowTo {
+  color: #000;
+  text-align: center;
+  font-family: Poppins;
+  font-size: 32px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+
+/* Styles for .btn.btn-primary */
+.btn.btn-primary {
+  width: 319px;
+  height: 49px;
+  border-radius: 50px;
+  background: #00A9CE;
+  font-family: Poppins;
+  /* Add other styles if needed */
+}
+
+/* styles.css */
+
+
+/* Styles for the .btn-primary2 class */
+.btn-primary2 {
+  width: 136px;
+  height: 35px;
+  flex-shrink: 0;
+  border-radius: 50px;
+  background: #00A9CE;
+  margin-right: 10px;
+  color: rgba(255, 255, 255, 0.90);
+  text-align: center;
+  font-family: Poppins;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  border: none;
+  outline: none;
+  transition: box-shadow 0.3s, background-color 0.3s;
+
+  /* Add shadow properties for hover and active states */
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Adjust the shadow values as needed */
+}
+
+/* Apply the shadow effect on hover */
+.btn-primary2:hover {
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15); /* Adjust the shadow values as needed */
+}
+
+/* Apply the shadow effect when active */
+.btn-primary2:active {
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.08); /* Adjust the shadow values as needed */
+}
+
+
+
+/* Styles for the <p> element within .col-md-6 */
+.col-md-6 p {
+  color: #000;
+  text-align: center;
+  font-family: Poppins;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  margin-top: 20px;
+}
+
+
+/* Custom style for the checked toggle */
+.form-check-input:checked {
+  background-color: #00A9CE; /* Change this to the desired color */
+  border-color: #00A9CE; /* Change this to match the background color or a different color if preferred */
+}
+
+/* Media query for smaller screens (adjust the max-width as needed) */
+@media (max-width: 768px) {
+  .card {
+    width: 90% !important; /* Reduce card width for smaller screens */
+  }
+}
+
+
+
+.btn-primary1 {
+  width: 319px;
+  height: 49px;
+  flex-shrink: 0;
+  border-radius: 50px;
+  background: #00A9CE;
+  margin-right: 10px;
+  color: rgba(255, 255, 255, 0.90);
+  text-align: center;
+  font-family: Poppins;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  border: none;
+  outline: none;
+  transition: box-shadow 0.3s, background-color 0.3s;
+
+  /* Add shadow properties for hover and active states */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Adjust the shadow values as needed */
+}
+
+/* Apply the shadow effect on hover */
+.btn-primary1:hover {
+  box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.15); /* Adjust the shadow values as needed */
+}
+
+/* Apply the shadow effect when active */
+.btn-primary1:active {
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08); /* Adjust the shadow values as needed */
+}

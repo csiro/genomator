@@ -1,0 +1,255 @@
+#!/usr/bin/env python3
+from random import randint, random, sample, shuffle, choice
+from asyncio import sleep, run
+from collections import defaultdict
+from operator import itemgetter
+from copy import deepcopy as copy
+from itertools import islice
+from pysat.solvers import Solver
+import vcfpy
+import click
+import numpy as np
+import time
+
+silent = False
+
+async def progress(itera, start_message, label, skip=0):
+    itera = list(itera)
+    if not silent:
+        print(start_message)
+        await sleep(0)
+        l = len(itera)
+    for ii,i in enumerate(itera):
+        if not silent and (ii&((2**skip)-1)==0):
+            print(f"{label} {ii}/{l}")
+            await sleep(0)
+        yield i
+    if not silent:
+        print(f"{label} {l}/{l}")
+        await sleep(0)
+
+async def async_print(*args):
+    if not silent:
+        print(*args)
+    await sleep(0)
+
+# parse_VCF_to_genome_strings(): parse a VCF file into an array of sample data, where
+# phased and unphased data get flattened into sequences of bytes objects
+async def parse_VCF_to_genome_strings(input_vcf_file):
+    with open(input_vcf_file,'r') as f:
+        num_records = sum([l[0]!='#' for l in f.readlines()])
+    genome_partials = []
+    genomes = []
+    reader = vcfpy.Reader.from_path(input_vcf_file)
+    ploidy = None
+    await async_print("Beginning VCF file loading")
+    for j,record in enumerate(reader):
+        gt_phase_char = None
+        for i,c in enumerate(record.calls):
+            if ploidy is None:
+                ploidy = c.ploidy
+            assert c.ploidy == ploidy, "genome ploidies much be identical"
+            if gt_phase_char is None:
+                gt_phase_char = c.gt_phase_char
+            assert c.gt_phase_char == gt_phase_char, "cannot curently work with mixed phases per vcf row"
+            fragment = c.gt_alleles
+            if i>=len(genomes):
+                genomes.append([])
+                genome_partials.append([])
+            for f in fragment:
+                genome_partials[i] += [f.to_bytes(1,"big")]
+        if j&31==0:
+            await async_print(f"loaded variants {j}/{num_records}")
+        if j&1023==0:
+            for jj in range(len(genomes)):
+                genomes[jj] += [b"".join(genome_partials[jj])]
+                genome_partials[jj] = []
+    reader.close()
+    await async_print(f"loaded variants {num_records}/{num_records}")
+    await async_print("Finished VCF file loading")
+    for jj in range(len(genomes)):
+        genomes[jj] += [b"".join(genome_partials[jj])]
+    genomes = [b"".join(g) for g in genomes]
+    return genomes,ploidy
+
+# parse_genome_strings_to_VCF(): output an array of bytes objects of flattened genome sample data
+# into a VCF file, with header information and structure reflective of an input VCF file
+async def parse_genome_strings_to_VCF(s, input_vcf_file, output_vcf_file, ploidy):
+    await async_print("Beginning VCF file output preparation")
+    number_of_genomes = len(s)
+    number_of_records = len(s[0])//ploidy
+    reader = vcfpy.Reader.from_path(input_vcf_file)
+    output_header = copy(reader.header)
+    output_header.samples = vcfpy.SamplesInfos(["GENERATEDSAMPLE{}".format(i) for i in range(number_of_genomes)])
+    writer = vcfpy.Writer.from_path(output_vcf_file, output_header)
+    recordset = None
+    await async_print("Beginning VCF file output")
+    for i,record in enumerate(reader):
+        if recordset is None:
+            recordset = [copy(record.calls[0]) for genome_number in range(number_of_genomes)]
+        record.calls = recordset
+        for genome_number in range(number_of_genomes):
+            record.calls[genome_number].sample = "GENERATEDSAMPLE{}".format(genome_number)
+            genome_fragment = [s[genome_number][i*ploidy+k] for k in range(ploidy)]
+            record.calls[genome_number].set_genotype(record.calls[genome_number].gt_phase_char.join([str(ff) for ff in genome_fragment]))
+        record.update_calls(record.calls)
+        writer.write_record(record)
+        if i&31==0:
+            await async_print(f"output records {i}/{number_of_records}")
+    await async_print(f"output records {number_of_records}/{number_of_records}")
+    await async_print("VCF file output complete")
+
+
+
+# get_approximate_distance_between_data(): sample approximate the hamming distances between different all the different genomes
+async def get_approximate_distance_between_data_binary(reference_genomes, difference_samples):
+    await async_print("preparing for clustering distance calculation process...")
+    length = len(reference_genomes)
+    difference_samples = min(len(reference_genomes[0]),difference_samples)
+    distances = [[0]*length for j in range(length)]
+    indices = sample(list(range(len(reference_genomes[0]))), difference_samples)
+    reference_genomes_np = [np.array(bytearray([r[i] for i in indices]),dtype=np.int8) for r in reference_genomes]
+    async for i in progress(range(len(reference_genomes_np)),"Clustering data points","cluster distance iteration",4):
+        for j in range(i+1,len(reference_genomes_np)):
+            distances[i][j] = np.linalg.norm(reference_genomes_np[i]-reference_genomes_np[j])**2
+            distances[j][i] = distances[i][j]
+    return distances
+
+# custer_setup(): break the data into non-intersecting clusters of similar points, equally sized and approximately of size <size>,
+# returning the indices of which data belongs in these clusters.
+# repeating this process <custering> times to get a range of overlapping clusters of similar data points so that all points are equally
+# sampled across the clusters
+async def cluster_setup_binary(reference_genomes, size, clustering=30,difference_samples=10000):
+    await async_print("preparing for clustering process...")
+    assert size>0, "please ensure cluster_group_size is integer > 0"
+    length = len(reference_genomes)
+    distances = await get_approximate_distance_between_data_binary(reference_genomes, difference_samples)
+    sorted_distances = [sorted(list(enumerate(d)), key=itemgetter(1)) for d in distances]
+    sorted_distance_indices = [[i for i,d in dd] for dd in sorted_distances]
+    partitions = length // size
+    refactor_size = length // partitions if partitions!= 0 else length
+    undershoot = length - refactor_size*partitions
+    index_sets = []
+    async for re_run in progress(range(clustering),"breaking into clusters","cluster re run"):
+        used_set = []
+        last_new_set = None
+        for i in range(partitions-1):
+            new_set = []
+            focus = last_new_set[-1] if last_new_set is not None else choice(list(range(length)))
+            ii = 0
+            while len(new_set)< (refactor_size + (i<undershoot)):
+                if sorted_distance_indices[focus][ii] not in used_set:
+                    used_set.append(sorted_distance_indices[focus][ii])
+                    new_set.append(sorted_distance_indices[focus][ii])
+                ii += 1
+            index_sets.append(new_set)
+            last_new_set = new_set
+        index_sets.append(list(set(range(length)).difference(set(used_set))))
+    return index_sets
+
+# convert_to_binary(): convert an array of truth values into an integer
+convert_to_binary = lambda x:sum([1<<i for i,xx in enumerate(x) if xx])
+
+# wrap_values(): return i-th integer in a sawtooth function of integers with absolute value N
+wrap_values = lambda x,N: (x+N)%(2*N+1)-N
+
+# generate_genomes(): generate <number_of_genomes> synthetic data from <reference_genomes>
+# employing a clustering the <reference_genomes> into similar points of size <sample_group_size>
+# The process repeatedly chooses a cluster randomly, and the SAT solver to ensures that any pair of properties (optionally but for some fraction <looseness>) that the cluster posesses (at a rate determined by <exception_space>) must also be true of the synthetic data point generated
+# <looseness> is a simple probability filter on what pairs of properties are constraining on the synthetic data output
+# <exception_space> is by default zero, where it only eliminates pairs of qualities not present in the source data from appearing in the output, or it can be positive (1,2,3) where it eliminates pairs of properties appearing a number of times or less in the input from appearing in the output; or it can be negative (-1,-1.5,-4 etc) for softer effect (attenuating properties that appear less than a random number less than its positive value)
+async def generate_genomes(reference_genomes, sample_group_size, number_of_genomes, exception_space, looseness):
+    genome_solutions = []
+    assert number_of_genomes>=0, "please ensure number_of_genomes is integer >= 0"
+    cluster_info = await cluster_setup_binary(reference_genomes, sample_group_size)
+
+    # repeat till we generate <number_of_genomes> synthetic data points
+    await async_print("Beginning Synthetic Data generation main loop.")
+    restarts = 0
+    while len(genome_solutions) < number_of_genomes:
+        await async_print(f"Completed {len(genome_solutions)}/{number_of_genomes}")
+        # select a cluster and shuffle
+        genomes = [reference_genomes[ii] for ii in choice(cluster_info)]
+        shuffle(genomes)
+        queries = set()
+        clauses = set()
+        query_mapping = defaultdict(dict)
+
+        initial_t = time.time()
+        # for each unique data column
+        for t in set(map(tuple, zip(*genomes))):
+            values = sorted(list(set(t))) # get the list of unique ascending values in the column
+            presence_list = [tuple([tt==value for tt in t]) for value in values]
+            absence_list  = [tuple([tt!=value for tt in t]) for value in values]
+            # collect novel T/F array
+            queries.update(presence_list)
+            queries.update(absence_list)
+            # collect information for reverse translation
+            query_mapping[t] = {q:values[i].to_bytes(1,"big") for i,q in enumerate(absence_list)}
+            clauses.add(frozenset(absence_list))
+        await async_print(f'collected queries in {time.time()-initial_t}')
+
+        # collect T/F arrays, assign unique variables to each (or negated variables for opposite arrays)
+        queries = sorted(list(queries))
+        variables = len(queries)//2
+        index = {v:wrap_values(i+1,variables) for i,v in enumerate(queries)}
+
+        # convert T/F arrays to big-integers and index of thoes integers to variables
+        query_mapping = {t:{index[a]:b for a,b in q.items()} for t,q in query_mapping.items()}
+        binary_queries = [convert_to_binary(q) for q in queries]
+        query_index_to_variable = [wrap_values(i+1,variables) for i in range(len(binary_queries))]
+
+        # instantiate a SAT solver, and add all relevant constraints
+        solver = Solver('minicard')
+        mask = convert_to_binary([True]*len(queries[0]))
+        initial_t = time.time()
+        for i,k1 in enumerate(binary_queries):
+            for j in range(i,len(binary_queries)):
+                e_space = exception_space if (exception_space >= 0) else int(random()*(abs(exception_space)+1))
+                if (((k1|binary_queries[j])^mask).bit_count() <= e_space) and (random()>=looseness):
+                    solver.add_clause([ -query_index_to_variable[i],-query_index_to_variable[j] ])
+        for c in clauses: solver.add_clause([index[cc] for cc in c])
+        await async_print(f'added clauses in {time.time()-initial_t}')
+
+        # randomise the SAT solver, solve the SAT problem and extract the solution, deleting the SAT solver instance
+        initial_t = time.time()
+        solver.set_phases([(i+1) * (2*randint(0,1)-1) for i in range(variables)])
+        if solver.solve() != True:
+            await async_print('SAT problem insoluble, if this repeats please loosen parameters to make problem tractable.')
+            restarts += 1
+            if restarts>10:
+                raise Exception("SAT problem insouble, too many restarts")
+            continue
+        solution = solver.get_model()
+        solver.delete()
+        await async_print(f'SAT solving complete in {time.time()-initial_t}')
+
+        # parse the output of the SAT solver back into sensible output data
+        initial_t = time.time()
+        genome_solutions.append(b"".join([[b for a,b in query_mapping[z].items() if a in set(solution)][0] for z in map(tuple, zip(*genomes)) ]))
+        await async_print(f'processed output in {time.time()-initial_t}')
+    await async_print(f"Completed {len(genome_solutions)}/{number_of_genomes}")
+    await async_print('finished Synthetic Data generation loop')
+    return genome_solutions
+
+# Genomator_exec(): from an <input_vcf_file> generate <number_of_genomes> synthetic data and export to <output_vcf_file>
+# the process involving clustering the <input_vcf_file> data into clusters of size <sample_group_size>
+# and <exception_space> and <looseness> parameters informing the process
+async def Genomator_exec(input_vcf_file, output_vcf_file, number_of_genomes, exception_space=0, sample_group_size=10, looseness=0):
+    await async_print('Beginning Genomator Genomic generation')
+    genomes, ploidy = await parse_VCF_to_genome_strings(input_vcf_file)
+    s = await generate_genomes(genomes, sample_group_size, number_of_genomes, exception_space, looseness)
+    await parse_genome_strings_to_VCF(s, input_vcf_file, output_vcf_file, ploidy)
+
+@click.command()
+@click.argument('input_vcf_file', type=click.types.Path())
+@click.argument('output_vcf_file', type=click.types.Path())
+@click.argument('number_of_genomes', type=click.INT, default=1)
+@click.option('--exception_space', type=click.INT, default=0)
+@click.option('--sample_group_size', type=click.INT, default=10)
+@click.option('--looseness', type=click.FLOAT, default=0)
+def Genomator_mini(input_vcf_file, output_vcf_file, number_of_genomes, exception_space, sample_group_size, looseness):
+    run(Genomator_exec(input_vcf_file, output_vcf_file, number_of_genomes, exception_space, sample_group_size, looseness))
+
+if __name__ == '__main__':
+	Genomator_mini()

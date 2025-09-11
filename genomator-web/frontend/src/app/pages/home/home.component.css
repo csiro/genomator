@@ -1,0 +1,165 @@
+/* No CSS *//*# sourceMappingURL=home.component.css.map */
+/* styles.css */
+
+body{
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Remove the fixed width for cards */
+.card {
+  margin: 0 auto;
+  flex-shrink: 0;
+  max-width: 80%; /* Set a maximum width as a percentage */
+  /* Add other styles if needed */
+}
+
+/* Media query for smaller screens (adjust the max-width as needed) */
+@media (min-width: auto) {
+  .card {
+    max-width: 1000px; /* Set the maximum width for larger screens */
+  }
+}
+
+/* Center the container */
+.my-container {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.card-with-top-gap {
+  margin-top: 20px; /* Adjust this value to set the desired top gap */
+}
+
+
+/* Styles for .card-header-GENOMATOR */
+.card-header-GENOMATOR {
+  color: #000;
+  text-align: left;
+  font-family: Poppins;
+  font-size: 64px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  margin-top: 40px;
+}
+
+/* Styles for .card-GENOMATOR */
+.card-GENOMATOR {
+  background-image: url("/assets/logo_faint.png");
+  background-position: right 60px;
+  background-repeat: no-repeat;
+}
+
+/* Styles for .card-title-SubmitJob */
+.card-title-SubmitJob {
+  color: #000;
+  text-align: left;
+  font-family: Poppins;
+  font-size: 32px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  margin-top: -20px; /* Adjust this value as needed */
+
+}
+
+/* Styles for .card-text */
+.card-text {
+  color: #000;
+  text-align: left;
+  font-family: Poppins;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  margin: 20px;
+}
+
+
+
+.btn-primary1 {
+  width: 319px;
+  height: 49px;
+  flex-shrink: 0;
+  border-radius: 50px;
+  background: #00A9CE;
+  margin-right: 10px;
+  color: rgba(255, 255, 255, 0.90);
+  text-align: center;
+  font-family: Poppins;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  border: none;
+  outline: none;
+  transition: box-shadow 0.3s, background-color 0.3s;
+
+  /* Add shadow properties for hover and active states */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Adjust the shadow values as needed */
+}
+
+/* Apply the shadow effect on hover */
+.btn-primary1:hover {
+  box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.15); /* Adjust the shadow values as needed */
+}
+
+/* Apply the shadow effect when active */
+.btn-primary1:active {
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08); /* Adjust the shadow values as needed */
+}
+
+
+
+
+
+/* Styles for the .btn-primary2 class */
+.btn-primary2 {
+  width: 136px;
+  height: 35px;
+  flex-shrink: 0;
+  border-radius: 50px;
+  background: #00A9CE;
+  margin-right: 10px;
+  color: rgba(255, 255, 255, 0.90);
+  text-align: center;
+  font-family: Poppins;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  border: none;
+  outline: none;
+  transition: box-shadow 0.3s, background-color 0.3s;
+
+  /* Add shadow properties for hover and active states */
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Adjust the shadow values as needed */
+}
+
+/* Apply the shadow effect on hover */
+.btn-primary2:hover {
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15); /* Adjust the shadow values as needed */
+}
+
+/* Apply the shadow effect when active */
+.btn-primary2:active {
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.08); /* Adjust the shadow values as needed */
+}
+
+/* */
+.list_text {
+  display: inline-flex;
+  width: 60%;
+  min-height:100px;
+}
+
+
+/* */
+.list_text_label {
+  width: 140px;
+  display: inline-block;
+  padding-right:30px;
+  text-align: right;
+}

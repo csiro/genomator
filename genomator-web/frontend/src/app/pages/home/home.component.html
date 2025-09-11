@@ -1,0 +1,157 @@
+<div class="my-container">
+    <div class="card mx-auto shadow mb-4 card-with-top-gap card-GENOMATOR">
+        <div class="row">
+            <div class="col-1"></div>
+            <div class="col-10">
+              <h1 class="card-header-GENOMATOR">Welcome to<br>Genomator</h1>
+                <div class="card-body">
+                    <div class="card-text">
+                      Genomator makes synthetic data by process of logical deduction so that it has properties observed in an uploaded real dataset<br>
+                      Genomator is designed to generate Genome data (in VCF format), but can handle tabular data (in CSV format)<br>
+                      A Lite version of Genomator can be run in the browser and on this site.<br>
+                      Upload your data here and click to generate synthetic data.<br>
+                      For research inquiries, contact our <a href="https://bioinformatics.csiro.au/get-in-touch/">research team</a>, and/or for commercial applications please <a href="https://www.csiro.au/en/work-with-us/services">contact us</a>.<br><br><br>
+                    </div>
+                    <h3 class="card-title-SubmitJob">Make Synthetic Tabular Data:</h3>
+                    <div class="card-text">
+                      For running Genomator on general tabular data to generate tabular data<br>click:
+                      <button id="example-results" class="btn btn-primary1" [routerLink]="['tabular']">Genomator for tabular CSV data <fa-icon [icon]="faFileLines"></fa-icon></button><br><br><br>
+                    </div>
+                      <h3 class="card-title-SubmitJob">Make Synthetic Genome Data:</h3>
+                    <div class="card-text">
+                      For running Genomator on genomic data, to generate genomic data<br>click:
+                      <button id="example-results" class="btn btn-primary1" [routerLink]="['genomic']">Genomator for genomic VCF data <fa-icon [icon]="faDna"></fa-icon></button><br><br><br><br>
+
+                    </div>
+
+                </div>
+            </div>
+            <div class="col-1"></div>
+        </div>
+    </div>
+
+    <div class="card mx-auto shadow mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-1"></div>
+                <div class="col-10">
+
+                    <h3 class="card-header-GENOMATOR">What is Genomator?</h3>
+
+                    <div class="card-text">
+                    Genomator deductively makes synthetic data that has the properties observed in the real data, by formulating a logical problem and solving it using a SAT solver.  Specifically, Genomator ensures that all the pairs of features that do not occur in the real data do not occur in the synthetic data. This deductive process is sufficient to quickly and accurately generate new synthetic data.<br>
+                    Genomator was originally made to generate synthetic data on the scale of genomes, and handle Genome data files (specified in VCF), but is also capable of handling other forms of tabular data (eg. in CSV).
+                    <br><br>
+                    This website has Lite versions of Genomator for generating VCF and CSV datasets, however see Github repository for source-code and the optimised full-featured implementation<br><br>
+<button id="example-results" class="btn btn-primary2 btn-sm" (click)="redirect('https://github.com/aehrc/genomator')"><fa-icon [icon]="faGithub"></fa-icon> GitHub</button>
+                    <br><br>
+                    <hr><br>
+
+                    </div>
+                    <h3 class="card-title-SubmitJob">Why Genomator?</h3>
+                    <div class="card-text">
+                    Genomator has a range of advantages over other techniques of synthetic data generation. Particularly Genomator is:<br><br>
+                      <ul>
+                        <li><img src="assets/fast1.png"     width="60"/><div class="list_text_label">Fast:</div>    <div class="list_text">
+                            Running without need for GPU support, creating large datasets in seconds, linearly scaling with the size of data created and without any need of training time.</div></li>
+                        <li><img src="assets/accurate1.png" width="60"/><div class="list_text_label">Accurate:</div>    <div class="list_text">
+                            Prohibiting the creation of hallucinatory features and feature combinations, and directly configurable by constraint determining how strongly accuracy is preserved (even to the point of total reproduction) or loosened (to allow random flexibility and variation).
+                          </div></li>
+                        <li><img src="assets/deductive1.png"width="60"/><div class="list_text_label">Deductive:</div>    <div class="list_text">
+                            Working with a SAT solver creates reliable and consistent performance, with no mode-collapses and no bad-runs, creating synthetic data with consistent accuracy across and between all features.
+                          </div></li>
+                        <li><img src="assets/scalable1.png" width="60"/><div class="list_text_label">Scalable:</div>    <div class="list_text">
+                            Built for generating synthetic data from large datasets with millions of feature columns (Genome data with millions of SNP features). Genomator uses logical shorthands for deducing multiple features at once in its process to rapidly deduce generate rich synthetic data.
+                          </div></li>
+                        <li><img src="assets/private1.png"  width="60"/><div class="list_text_label">Private:</div>  <div class="list_text">
+                            Deductively (and stochastically) attenuating rare combinations of features in the dataset, affords synthetic data with quantifiable privacy qualities
+                          </div></li>
+                        <li><img src="assets/configurable1.png"  width="60"/><div class="list_text_label">Configurable:</div>  <div class="list_text">
+                            A range of parameters alter different aspects of Genomator workflow to tune different outcomes between privacy/accuracy/runtime. Additional constraints can be added (or specific ones removed) to the deductive create more customised synthetic data for specific purposes.
+                          </div></li>
+                      </ul>
+                      These qualities can be contrasted and compared with other Machine-Learning and statistical techniques.<br><br> See:
+                      <button id="example-results" class="btn btn-primary2 btn-sm" (click)="redirect('https://arxiv.org/abs/2410.16705')"><fa-icon [icon]="faBook"></fa-icon> Publication</button><br><br>
+                      <br>
+                    <hr><br>
+                    </div>
+                    <h3 class="card-title-SubmitJob">How does Genomator work?</h3>
+                    <div class="card-text">
+                      Genomator constructs synthetic data by formulating a logical problem and solving it using a SAT solver, to deductively make synthetic data that has the properties observed in the real data.
+                      Necessarily, the real data (or a subset of it) is considered, and the properties of interest that such real data possess are determined, these properties (or a subset of them) are then transformed into constraints over the process of generating the synthetic data to ensure that the synthetic data also has those properties.
+                      Specifically, the properties Genomator considers are the pairs of features (or genomic variants) that do not occur (or only occur below some frequency).<br>
+                      <br>
+                      The pairs of genomic variants that exist in the real data are considered, and those pairs of variants that are seen to not exist in the real data are determined.
+                      For any pair of variants that do not exist in the real data, a constraint is imposed on the generation of the synthetic data to prevent such a pair from appearing in the synthetic data.
+                      It is seen that satisfaction of these constraints alone is sufficient to generate realistic synthetic data.<br>
+                      <br>
+                      The process that Genomator uses to construct synthetic data is depicted in the following figure:<br>
+                      <br>
+
+
+<img src="assets/genomator_figure_illustrated.png" style="width: 90%; max-width: 1004px;"/><br>
+<div style="font-size: small;"><b>Figure 1</b>: Flowchart illustrating the process Genomator uses to construct synthetic genomes, The input data is specified in VCF format, this genomic data is clustered into groups of size N, pairs of variants that do not occur together (or occur together below some attenuation frequency Z) in the cluster are observed (with a probability, a looseness factor L), and a logical problem is generated to construct synthetic data that that ensures that these pairs do not exist. A SAT solver is used to solve the logical problem and the result - a synthetic genome - is added to a VCF file output; the process is repeated to generate more than one synthetic genome.</div>
+
+<br>
+
+
+                <div class="card mx-auto shadow mb-4">
+                  <div class="row">
+                    <div style="padding-top:10px; padding-bottom:10px; font-size:small">
+                      <b>Q: What is a SAT solver?</b>
+                      <div style="padding-left:10px; padding-right:10px">
+                      A SAT problem is a class of problem that requires finding the values of a set of binary variables to satisfy a specified set of constraints - a logic puzzle. The set of variables and their True/False values can be used to represent any finite range of configurations of the state of the puzzle, and the constraints that need to be satisfied are what is required to solve the puzzle.
+                      The background and features of SAT problems are well documented and there exist a range of software packages (SAT solvers) which can solve these kinds of problems.
+                      Genomator software uses the <a href="https://pysathq.github.io/">PySAT library</a> to interface with a number of available SAT solvers.<br>
+                      Genomator creates a SAT problem where the presence of particular variants in the synthetic data are modelled as binary variables, and the constraints that particular pairs of variants cannot co-exist in the synthetic data (because they are not witnessed to occur in the real data) are modelled as simple Boolean constraints on the values of those binary variables in the SAT problem.
+                      For instance: if binary variables x1 and x2 indicate the presence of two variants in the synthetic data, then the constraint “¬x1 OR ¬x2” ensures that both variants will not occur together in the synthetic data, and so on...
+                      <br>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
+                      From Figure 1, the process that Genomator uses consists in phases:
+                      <ul>
+                        <li>A VCF file is uploaded containing the source dataset from which to generate similar synthetic data.</li>
+                        <li>The samples of genome data in the VCF file are compared to each otherwise by their hamming distances, and a cluster subset of similar genomic samples (of size <b>'N'</b>) is selected.</li>
+                        <li>All pairs of features (ie. genome variants - reference and alternatives) in the cluster are considered (their presences and also absences), and where a pair of features does not exist in the cluster (or has a frequency below some threshold <b>'Z'</b>) a constraint is formed to prohibit that pair of features from existing in the synthetic data - which is yet to be determined.</li>
+                        <li>The set of constraints is randomly filtered by some probability factor <b>'L'</b>.</li>
+                        <li>The remaining set of constraints prohibiting what feature pairs can occur in the synthetic data forms a logical problem, which is then rendered as a SAT problem.</li>
+                        <li>The SAT problem is then input into a SAT solver, and the resulting solution identifies what features occur in the synthetic data.</li>
+                        <li>The synthetic data resolved by the SAT solver is then added to the VCF output file, and the process repeats for the generation of another synthetic data output until a sufficient number of synthetic genomes have been generated.</li>
+                      </ul>
+
+
+                      <br>
+
+
+                      Genomator has several parameters which can be specified in how it generates synthetic data, and these have contrasting effects on how constricted the SAT solver is in generating the synthetic data and the qualities of the results:<br>
+                      <ul>
+                        <li><b>Z - the attenuation factor</b>:<br>
+                      This parameter stochastically controls how likely rare pairs of features are attenuated in the synthetic data output and functions to further constrain the output of the synthetic data generation process, and has intuitive privacy qualities.
+                      By default Z=0, ensuring that pairs of features that do not exist in the cluster of input data are ensured not to exist in the synthetic data, For Z=1, feature pairs which are witnessed to occur once-or-less are prohibited from being in the synthetic data, Z=2 for features pairs two-or-less, and so on...
+                      The greater the value of Z, the more privacy the process is designed to achieve, but the more conservative and constrained the output and process.
+                      Noting that even for Z=0, the process that Genomator uses is naturally quite conservative (only producing features and feature pairs that are witnessed in the real data). Thus to moderate how conservative the resulting synthetic data is, two additional parameters are considered by the algorithm: firstly a random subset of constraints are dropped with probability L, and the size of the number of inputs into the process is specified, N.
+                        </li>
+                        <li><b>N - the cluster size</b>:<br> The bigger the size of the cluster considered the more likely there are to be more instances of feature pairs in the cluster and consequently the fewer constraints will apply to the generation of the synthetic data, making the process less constrained and less conservative; this occurs at the cost of runtime as more data is considered at once by the generation process, and the more the output of different datapoints will be smudged together into group characteristics.
+                        </li>
+                        <li><b>L - the looseness factor</b>:<br> randomly dropping constraints in the generation process also stochastically allows the synthetic data to possess feature pairs not witnessed in the real data, making the synthetic data less conservative and the process of generating it less constrained; this occurs at a boost to runtime as less constraints are added to the SAT solver, but more noise is added as a result as feature pairs entirely absent from the source dataset may consequently be incorporated in the synthetic output data.
+                        </li>
+                      </ul>
+                      The degree to which accuracy, privacy and speed is desired can be controlled by the interplay in specifying these variables.<br><br>
+                      The full version of the Genomator software is available from the software repository:<br>
+                      <button id="example-results" class="btn btn-primary2 btn-sm" (click)="redirect('https://github.com/aehrc/genomator')"><fa-icon [icon]="faGithub"></fa-icon> GitHub</button><br>
+
+Further information can be found in the publication:<br><button id="example-results" class="btn btn-primary2 btn-sm" (click)="redirect('https://arxiv.org/abs/2410.16705')"><fa-icon [icon]="faBook"></fa-icon> Publication</button><br><br>
+
+
+
+
+                </div>
+                <div class="col-1"></div>
+            </div>
+        </div>
+    </div>
+</div>

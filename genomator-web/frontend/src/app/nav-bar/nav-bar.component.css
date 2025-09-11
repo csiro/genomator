@@ -1,0 +1,73 @@
+/* Additional styling for the image */
+.genomator-image {
+  margin: 5px;
+  margin-right: 30px;
+  margin-left: 20px;
+  height: 50px;
+  width: auto;
+  transition: transform 0.5s ease-in-out;
+}
+
+.genomator-image:hover {
+  animation: throbbing 1s infinite;
+  transform: scale(1.2);
+}
+
+
+
+/* OFF CANVAS STYLING */
+
+.offcanvas-header {
+  background-color: #19404b;
+}
+
+.offcanvas-title {
+  color: white;
+}
+
+/* MAIN NAVBAR */
+
+ .navbar {
+  background-color: #19404b;
+}
+
+.navbar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.navbar li {
+  display: inline-block;
+  margin-right: 30px;
+}
+
+.navbar a.nav-link {
+  color: white;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 115px;
+  padding: 10px;
+  text-transform: uppercase;
+  border-radius: 20px;
+  transition: background-color 0.5s ease; /* Removed transform transition */
+}
+
+.navbar a.nav-link:hover {
+  background-color: #00A9CE; /* Changed background color */
+}
+
+/* Keep the color for selected links */
+.navbar a.nav-link.active {
+  background-color: #00A9CE;
+}
+
+
+/* Target the bars of the hamburger icon */
+.navbar-toggler-icon span {
+  background-color: white; /* Set the color of the bars to white */
+}
+
+

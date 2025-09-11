@@ -1,0 +1,40 @@
+/* You can add global styles to this file, and also import other style files */
+@import "../node_modules/bootstrap/scss/bootstrap","../node_modules/@angular/material/prebuilt-themes/deeppurple-amber.css"
+
+
+
+@import "../node_modules/bootstrap/scss/bootstrap"
+
+div.mytooltip
+  position: absolute 
+  text-align: left 
+  width: 300px
+  height: auto
+  padding: 10px 
+  background: lightsteelblue 
+  border: 3px 
+  border-radius: 5px 
+  pointer-events: none 
+  transform: translate(-50%, -100%)
+  overflow: none
+  
+
+
+html, body
+  height: 100%
+
+.root-wrapper
+  min-height: 100%
+  display: flex
+  flex-direction: column
+  justify-content: space-between
+
+page-content
+  height: 100%
+
+app-nav-bar
+  display: flex
+  position: sticky
+  top: 0
+  z-index: 1000
+  flex-direction: column
