@@ -20,6 +20,10 @@ and all preprocessing is conducted by scripts in /experiment/experiment/source_g
 
 A cardinality SAT solver and python wrapper built, which is compatible with Genomator.
 
+### /genomator-web
+
+AngularJS project for a website (with Terraform AWS deploy configuration) for a website version of Genomator
+
 ## Licensing
 - The main codebase (in `/genomator`) is licensed under the CSIRO Non-Commercial License (based on BSD 3-Clause Clear).
 - The optional module in `/tinicard` is based on a GPLv2+ codebase and is therefore licensed under the GNU GPLv2+.
