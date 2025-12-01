@@ -42,7 +42,6 @@ testem.log
 Thumbs.db
 
 # Environment files
-src/environments/*
-!src/environments/.gitkeep
+src/environments/*.ts
 
 .DS_Store
