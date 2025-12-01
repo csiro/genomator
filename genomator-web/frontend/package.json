@@ -48,6 +48,7 @@
     "@types/d3": "^7.4.0",
     "@types/jasmine": "~4.3.0",
     "@types/lodash": "^4.14.190",
+    "@types/node": "^20.19.25",
     "autoprefixer": "^10.4.13",
     "css-loader": "^6.7.2",
     "jasmine-core": "~4.5.0",
