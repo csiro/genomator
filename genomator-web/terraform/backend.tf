@@ -4,6 +4,5 @@ terraform {
     bucket         = "terraform-states-genomator-website"
     key            = "example"
     region         = "ap-southeast-2"
-    dynamodb_table = "terraform-state-genomator-locks"
   }
 }

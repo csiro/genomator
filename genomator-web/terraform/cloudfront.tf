@@ -49,12 +49,13 @@ resource "aws_cloudfront_distribution" "app_distribution" {
   }
 
   default_cache_behavior {
-    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods         = ["GET", "HEAD"]
-    viewer_protocol_policy = "redirect-to-https"
-    target_origin_id       = local.s3_web_origin_id
-    cache_policy_id        = data.aws_cloudfront_cache_policy.app_distribution.id
-    compress               = true
+    allowed_methods            = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods             = ["GET", "HEAD"]
+    viewer_protocol_policy     = "redirect-to-https"
+    target_origin_id           = local.s3_web_origin_id
+    cache_policy_id            = data.aws_cloudfront_cache_policy.app_distribution.id
+    compress                   = true
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.headers_policy.id
   }
 
   price_class = "PriceClass_200"
@@ -68,5 +69,37 @@ resource "aws_cloudfront_distribution" "app_distribution" {
 
   viewer_certificate {
     cloudfront_default_certificate = true
+  }
+}
+
+resource "aws_cloudfront_response_headers_policy" "headers_policy" {
+  name = "genomator-security-headers-policy"
+
+  security_headers_config {
+    strict_transport_security {
+      override                   = true
+      access_control_max_age_sec = 63072000
+      include_subdomains         = true
+      preload                    = true
+    }
+
+    content_type_options {
+      override = true
+    }
+
+    frame_options {
+      override     = true
+      frame_option = "DENY"
+    }
+
+    content_security_policy {
+      content_security_policy = "frame-ancestors 'self';block-all-mixed-content;default-src 'none';script-src 'self' 'report-sample' 'wasm-unsafe-eval' cdnjs.cloudflare.com cdn.jsdelivr.net;style-src 'self' 'report-sample' cdnjs.cloudflare.com cdn.jsdelivr.net https://fonts.googleapis.com/ https://fonts.gstatic.com/ 'unsafe-inline';object-src 'none';frame-src 'self';child-src 'self';img-src 'self' data: cdnjs.cloudflare.com cdn.jsdelivr.net https://fonts.gstatic.com/;font-src 'self' cdnjs.cloudflare.com cdn.jsdelivr.net https://fonts.googleapis.com/ https://fonts.gstatic.com/;connect-src 'self' cdnjs.cloudflare.com cdn.jsdelivr.net https://fonts.googleapis.com/ https://fonts.gstatic.com/;manifest-src 'self';base-uri 'self';form-action 'self';media-src 'self';worker-src 'self';"
+      override                = true
+    }
+
+    referrer_policy {
+      override        = true
+      referrer_policy = "no-referrer"
+    }
   }
 }
