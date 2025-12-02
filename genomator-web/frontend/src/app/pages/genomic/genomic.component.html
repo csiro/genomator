@@ -1,265 +1,525 @@
 <div class="my-container">
-
-    <div class="card mx-auto shadow mb-4">
-        <div class="row">
-          <div class="col-1"></div>
-          <div class="col-10">
-            <b><u>Please note</u></b> that this is a lite version of Genomator software and is not designed to most effectively handle large VCF files. For larger and more difficult applications please visit out <a href="https://bioinformatics.csiro.au/">research group page</a> or reach out to us <a href="https://bioinformatics.csiro.au/get-in-touch/">directly</a>.
-            <br>
-          </div>
+  <div class="card mx-auto shadow my-4">
+    <div class="row">
+      <div class="col-10 offset-1">
+        <b><u>Please note</u></b> that this is a lite version of Genomator
+        software and is not designed to most effectively handle large VCF files.
+        For larger and more difficult applications please visit out
+        <a href="https://bioinformatics.csiro.au/">research group page</a> or
+        reach out to us
+        <a href="https://bioinformatics.csiro.au/get-in-touch/">directly</a>.
+        <br />
+        <div class="alert alert-success" role="alert">
+          Genomator's sythentic data generations executes computations entirely
+          on
+          <strong>your own computer</strong> in your web browser. Data is
+          <strong>never</strong> transmitted outside your device.
         </div>
-    </div>
-
-    <div class="card mx-auto shadow mb-4 card-with-top-gap">
-        <div class="row">
-            <div class="col-1"></div>
-            <div class="col-10">
-                <div class="card-body">
-                    <h3 class="card-title-DataSubmission">Genomic Data Generation</h3>
-                    <br>
-
-                    <div *ngIf="loading">
-                      <div class="spinner-border" role="status">
-                        <span class="sr-only"></span>
-                      </div><br>
-                      Loading Status:
-                      <div class="alert alert-secondary code-block" role="alert" [innerHTML]="loadingStatus"></div>
-                    </div>
-
-                    <div *ngIf="!loading">
-                    Input source dataset:
-                    <hr>
-
-                    <form [formGroup]="form" class="needs-validation" novalidate>
-
-                        <div class="mb-3 row">
-                            <label for="filePicker" class="col-sm-3 col-form-label"> <strong> Upload VCF file: </strong></label>
-                            <div class="col-sm-8">
-                                <input formControlName="filePicker"
-                                    accept=".vcf" class="form-control" type="file"
-                                    id="filePicker" (change)="handlePick($event)">
-                                <div class="invalid-feedback" style="display: block;"
-                                    *ngIf="form.controls.filePicker.touched && form.controls.filePicker.invalid">
-                                    Please input a valid VCF file.
-                                </div>
-                            </div>
-                        </div>
-
-                        <br>
-                    Choose generation parameters:
-                    <hr>
-
-
-                        <div class="mb-3 row">
-                            <label for="cluster_group_size" class="col-sm-3 col-form-label"><strong>Choose a Cluster Group Size</strong> (ie. N)</label>
-                            <div class="col-sm-8">
-                                <input id="cluster_group_size" type="number" min="1" step="1" onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))" formControlName="cluster_group_size" class="form-control" required>
-                                <div class="invalid-feedback" style="display: block;"
-                                    *ngIf="form.controls.cluster_group_size.touched && form.controls.cluster_group_size.invalid">
-                                    Please input a positive whole integer value.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3 row">
-                            <label for="looseness" class="col-sm-3 col-form-label"><strong>How much looseness should the process involve?</strong> (ie. L)</label>
-                            <div class="col-sm-8">
-                                <input id="looseness" type="range" min="0" max="1" step="0.01" formControlName="looseness" class="form-range" required>
-                                {{this.form.value.looseness}}
-                            </div>
-                        </div>
-
-                        <div class="mb-3 row">
-                            <label for="exception_space" class="col-sm-3 col-form-label"><strong>How how much should rare pairs be attenuated?</strong> (ie. Z)</label>
-                            <div class="col-sm-8">
-                                <input id="exception_space" type="range" min="0" max="5" step="0.05" formControlName="exception_space" class="form-range" required>
-                                {{this.form.value.exception_space}}
-                            </div>
-                        </div>
-
-
-                        <div class="mb-3 row">
-                            <label for="number_of_data" class="col-sm-3 col-form-label"><strong>How many Synthetic Data Points?</strong></label>
-                            <div class="col-sm-8">
-                                <input id="number_of_data" type="number" min="1" step="1" onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))" formControlName="number_of_data" class="form-control" required>
-                                <div class="invalid-feedback" style="display: block;"
-                                    *ngIf="form.controls.number_of_data.touched && form.controls.number_of_data.invalid">
-                                    Please input a positive whole integer value.
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <br><br>
-                        <div class="mb-3 row">
-                            <div class="col-sm-3 offset-3">
-                                <button type="submit" class="btn btn-primary1" (click)="submitJob()"
-                                    [disabled]="disableSubmit">Generate Synthetic Data</button>
-                            </div>
-                        </div>
-
-
-                    </form>
-
-                    <br>
-                    <div class="mb-3 row">
-                        <div class="col-sm-3 offset-3">
-                            <button class="btn btn-primary1" (click)="downloadResults()"
-                                    [disabled]="disableDownload">Download Results</button>
-                        </div>
-                    </div>
-
-                    <br>
-                    <div *ngIf="!disableLog">
-                    <hr>
-                    Status:
-                    <div [class]="statusClass" role="alert" [innerHTML]="status"></div>
-                    <div class="mb-3 row">
-                        <div class="col-sm-12">
-                            <div class="progress">
-                                <div [style]="{'width': progress1 + '%'}" class="progress-bar" role="progressbar"
-                                    aria-label="progress1" aria-valuenow="0" aria-valuemin="0"
-                                    aria-valuemax="100">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <div class="col-sm-12">
-                            <div class="progress">
-                                <div [style]="{'width': progress2 + '%'}" class="progress-bar" role="progressbar"
-                                    aria-label="progress2" aria-valuenow="0" aria-valuemin="0"
-                                    aria-valuemax="100">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <div class="col-sm-12">
-                            <div class="progress">
-                                <div [style]="{'width': progress3 + '%'}" class="progress-bar" role="progressbar"
-                                    aria-label="progress3" aria-valuenow="0" aria-valuemin="0"
-                                    aria-valuemax="100">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <div class="col-sm-12">
-                            <div class="progress">
-                                <div [style]="{'width': progress4 + '%'}" class="progress-bar" role="progressbar"
-                                    aria-label="progress4" aria-valuenow="0" aria-valuemin="0"
-                                    aria-valuemax="100">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <div class="col-sm-12">
-                            <div class="progress">
-                                <div [style]="{'width': progress5 + '%'}" class="progress-bar" role="progressbar"
-                                    aria-label="progress5" aria-valuenow="0" aria-valuemin="0"
-                                    aria-valuemax="100">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    Log:
-                    <textarea class="form-control code-block" #log_textarea1 rows="7" [innerHTML]="logging_message"></textarea>
-                    </div>
-
-
-                    </div>
-
-
-
-                <div class="col-1"></div>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-    <div class="card mx-auto shadow mb-4">
-        <div class="row">
-            <div class="col-1"></div>
-            <div class="col-10">
-                <div class="card-body">
-
-                    <p class="card-title-HowTo">How to use</p>
-                    The <i>'Genomic Data Generation'</i> page will load an interface hosting a lite version of Genomator software for use generating synthetic datasets from small genomic VCF datafiles.<br>
-
-                    The page will load and then present an interface with a series of options to be specified in order to configure the process of synthetic data generation:
-
-                    <ul class="bullet-list list-unstyled pl-0">
-                      <li><b>Upload VCF file</b> - You will need to upload and tell the software a bit about your VCF data (compatibility upto <a href="https://samtools.github.io/hts-specs/VCFv4.3.pdf">VCF specification 4.3</a>)</li>
-                      <li><b>Choose a Cluster Group Size</b> - Please indicate the 'Cluster Group Size' parameter of the Genomator algorithm, as an integer greater than '1' and less than the number of datapoint rows in the input CSV input. This parameter controls how much flexibility Genomator has to introduce variation in the data generation process (a Cluster Group Size of '1' causes total reproduction of input data) - a default Cluster group size is '10'. </li>
-                      <li><b>How much looseness should the process involve?</b> - a number between 0 and 1, controlling the number of constraints that are randomly dropped in the generation process, more directly adds flexibility into the generation process, default of zero. </li>
-                      <li><b>How much should rare pairs be attenuated?</b> - a number greater than zero; for a given cluster size, if any pair of features falls below this frequency should the algorithm try to ensure it will not appear the synthetic output, default of zero - ensuring only features that occur zero times in the input cluster are not appearing in the synthetic data output. </li>
-                      <li><b>How many Synthetic Data points?</b> - Please then indicate how many synthetic data points you would like Genomator to generate</li>
-                    </ul>
-
-                <div class="card mx-auto shadow mb-4">
-                  <div class="row">
-                    <div class="col-1"></div>
-                    <div class="col-10">
-                      <b><u>EXAMPLE:</u></b> Consider the dataset of 805 SNPs used by <a href="https://doi.org/10.1371/journal.pgen.1009303">Yelmen et.al</a> per their <a href="https://gitlab.inria.fr/ml_genetics/public/artificial_genomes">repository</a>. This dataset can be converted into a VCF file: <a href="assets/805_SNP_1000G_real.vcf">805_SNP_1000G_real.vcf</a>.<br>
-                      We generate synthetic data from this VCF file, with a cluster group size of '10', '0' looseness and attenuation, and '1000' synthetic data points, as shown:<br>
-                      <img src="assets/805_SNP_1000G_real_config.png" style="width: 100%; max-width: 385px;"/><br>
-                      After generating this synthetic data, we can plot the synthetic data on the two largest principle components of the source dataset (doing PCA analysis), gives the following plot:
-                      <img src="assets/805_SNP_1000G_real.png" style="width: 100%; max-width: 833px;"/><br>
-                      In this plot we can see that the synthetic data (shown in blue) has good coincidence with the source dataset (shown in red), at reproducing the major components of human genomic variation in this small 805 SNP dataset.
-                      <hr>
-                      <button class="btn btn-primary1" (click)="loadExample()">Run with Example data</button>
-                      <br>
-                    </div>
-                  </div>
-                </div>
-
-                <hr>
-                Please note that this is a Lite version of the full Genomator software, and not optimised for large VCF loading and generation.<br>
-                The underlying Python source of the software being run on this page is able to be downloaded and run separately:<br><br>
-
-                      <button id="example-results" class="btn btn-primary2 btn-sm" (click)="redirect('assets/genomator_mini.py')"><fa-icon [icon]="faPython"></fa-icon> Source</button><br><br>
-
-                <div class="col-1"></div>
-            </div>
-        </div>
-    </div>
-    </div>
-
-
-
-
-    <div class="card mx-auto shadow mb-4">
-        <div class="row">
-            <div class="col-1"></div>
-            <div class="col-10">
-                <div class="card-body">
-
-                  <h4>License</h4>
-
-
-                  Copyright (c) 2025 Commonwealth Scientific and Industrial Research Organisation (CSIRO) ABN 41 687 119 230.<br>
-<br>
-CSIRO hereby grants you a non-exclusive, non-transferable, free of charge right to copy, modify, merge, publish, distribute, and sublicense this software for the sole purpose of performing non-commercial scientific research, non-commercial education, or non-commercial research projects.<br>
-<br>
-Any other use, in particular any use for commercial purposes, is prohibited. This includes, without limitation, incorporation in a commercial product, use in a commercial service, or production of other artefacts for commercial purposes.<br>
-<br>
-Neither the name of CSIRO nor the names of its authors may be used to endorse or promote products derived from this software without specific prior written permission of CSIRO.<br>
-<br>
-NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS LICENSE. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR CSIRO BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.<br>
-<br>
-You understand and agree that the authors and/or CSIRO are under no obligation to provide either maintenance services, update services, notices of latent defects, or corrections of defects with regard to the Software.<br>
-<br>
-The Software may contain third party material obtained by CSIRO under licence.  Your rights to such material as part of the Software under this agreement is subject to any separate licence terms identified by CSIRO as part of the Software release - including as part of the Supplementary Licence, or as a separate file. Those third party licence terms may require you to download the relevant software from a third party site, or may mean that the third party licensor (and not CSIRO) grants you a licence directly for those components of the Software. It is your responsibility to ensure that you have the necessary rights to such third party material.
-
-
-
-
-                <div class="col-1"></div>
-            </div>
-        </div>
+      </div>
     </div>
   </div>
 
+  <div class="card mx-auto shadow mb-4 card-with-top-gap">
+    <div class="row">
+      <div class="col-1"></div>
+      <div class="col-10">
+        <div class="card-body">
+          <h3 class="card-title-DataSubmission">Genomic Data Generation</h3>
+          <br />
+
+          <div *ngIf="loading">
+            <div class="spinner-border" role="status">
+              <span class="sr-only"></span>
+            </div>
+            <br />
+            Loading Status:
+            <div
+              class="alert alert-secondary code-block"
+              role="alert"
+              [innerHTML]="loadingStatus"
+            ></div>
+          </div>
+
+          <div *ngIf="!loading">
+            Input source dataset:
+            <hr />
+
+            <form [formGroup]="form" class="needs-validation" novalidate>
+              <div class="mb-3 row">
+                <label for="filePicker" class="col-sm-3 col-form-label">
+                  <strong> Upload VCF file: </strong></label
+                >
+                <div class="col-sm-8">
+                  <input
+                    formControlName="filePicker"
+                    accept=".vcf"
+                    class="form-control"
+                    type="file"
+                    id="filePicker"
+                    (change)="handlePick($event)"
+                  />
+                  <div
+                    class="invalid-feedback"
+                    style="display: block"
+                    *ngIf="
+                      form.controls.filePicker.touched &&
+                      form.controls.filePicker.invalid
+                    "
+                  >
+                    Please input a valid VCF file.
+                  </div>
+                </div>
+              </div>
+
+              <br />
+              Choose generation profile:
+              <hr />
+              <div class="mb-3 row">
+                <div class="col-sm-3">
+                  <button
+                    type="submit"
+                    class="btn btn-primary1"
+                    style="width: 290px"
+                    [class.active]="mode === ParamMode.Balanced"
+                    (click)="setMode(ParamMode.Balanced)"
+                  >
+                    Balanced accuracy and privacy
+                  </button>
+                </div>
+                <div class="col-sm-3">
+                  <button
+                    type="submit"
+                    class="btn btn-primary1"
+                    style="width: 290px"
+                    [class.active]="mode === ParamMode.HighAccuracy"
+                    (click)="setMode(ParamMode.HighAccuracy)"
+                  >
+                    High accuracy and low privacy
+                  </button>
+                </div>
+                <div class="col-sm-3">
+                  <button
+                    type="submit"
+                    class="btn btn-primary1"
+                    style="width: 290px"
+                    [class.active]="mode === ParamMode.HighPrivacy"
+                    (click)="setMode(ParamMode.HighPrivacy)"
+                  >
+                    High privacy and low accuracy
+                  </button>
+                </div>
+                <div class="col-sm-3">
+                  <button
+                    type="submit"
+                    class="btn btn-primary1"
+                    style="width: 290px"
+                    [class.active]="mode === ParamMode.Advanced"
+                    (click)="setMode(ParamMode.Advanced)"
+                  >
+                    Advanced Configuration
+                  </button>
+                </div>
+              </div>
+
+              <br />
+              Choose generation parameters:
+              <hr />
+
+              <div class="mb-3 row">
+                <label for="cluster_group_size" class="col-sm-3 col-form-label"
+                  ><strong>Choose a Cluster Group Size</strong> (ie. N)</label
+                >
+                <div class="col-sm-8">
+                  <input
+                    id="cluster_group_size"
+                    type="number"
+                    min="1"
+                    step="1"
+                    onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))"
+                    formControlName="cluster_group_size"
+                    class="form-control"
+                    required
+                  />
+                  <div
+                    class="invalid-feedback"
+                    style="display: block"
+                    *ngIf="
+                      form.controls.cluster_group_size.touched &&
+                      form.controls.cluster_group_size.invalid
+                    "
+                  >
+                    Please input a positive whole integer value.
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3 row">
+                <label for="looseness" class="col-sm-3 col-form-label"
+                  ><strong
+                    >How much looseness should the process involve?</strong
+                  >
+                  (ie. L)</label
+                >
+                <div class="col-sm-8">
+                  <input
+                    id="looseness"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    formControlName="looseness"
+                    class="form-range"
+                    required
+                  />
+                  {{ this.form.value.looseness }}
+                </div>
+              </div>
+
+              <div class="mb-3 row">
+                <label for="exception_space" class="col-sm-3 col-form-label"
+                  ><strong
+                    >How how much should rare pairs be attenuated?</strong
+                  >
+                  (ie. Z)</label
+                >
+                <div class="col-sm-8">
+                  <input
+                    id="exception_space"
+                    type="range"
+                    min="0"
+                    max="5"
+                    step="0.05"
+                    formControlName="exception_space"
+                    class="form-range"
+                    required
+                  />
+                  {{ this.form.value.exception_space }}
+                </div>
+              </div>
+
+              <div class="mb-3 row">
+                <label for="number_of_data" class="col-sm-3 col-form-label"
+                  ><strong>How many Synthetic Data Points?</strong></label
+                >
+                <div class="col-sm-8">
+                  <input
+                    id="number_of_data"
+                    type="number"
+                    min="1"
+                    step="1"
+                    onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))"
+                    formControlName="number_of_data"
+                    class="form-control"
+                    required
+                  />
+                  <div
+                    class="invalid-feedback"
+                    style="display: block"
+                    *ngIf="
+                      form.controls.number_of_data.touched &&
+                      form.controls.number_of_data.invalid
+                    "
+                  >
+                    Please input a positive whole integer value.
+                  </div>
+                </div>
+              </div>
+
+              <br /><br />
+              <div class="mb-3 row">
+                <div class="col-sm-3 offset-3">
+                  <button
+                    type="submit"
+                    class="btn btn-primary1"
+                    (click)="submitJob()"
+                    [disabled]="disableSubmit"
+                  >
+                    Generate Synthetic Data
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <br />
+            <div class="mb-3 row">
+              <div class="col-sm-3 offset-3">
+                <button
+                  class="btn btn-primary1"
+                  (click)="downloadResults()"
+                  [disabled]="disableDownload"
+                >
+                  Download Results
+                </button>
+              </div>
+            </div>
+
+            <br />
+            <div *ngIf="!disableLog">
+              <hr />
+              Status:
+              <div
+                [class]="statusClass"
+                role="alert"
+                [innerHTML]="status"
+              ></div>
+              <div class="mb-3 row">
+                <div class="col-sm-12">
+                  <div class="progress">
+                    <div
+                      [style]="{ width: progress1 + '%' }"
+                      class="progress-bar"
+                      role="progressbar"
+                      aria-label="progress1"
+                      aria-valuenow="0"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3 row">
+                <div class="col-sm-12">
+                  <div class="progress">
+                    <div
+                      [style]="{ width: progress2 + '%' }"
+                      class="progress-bar"
+                      role="progressbar"
+                      aria-label="progress2"
+                      aria-valuenow="0"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3 row">
+                <div class="col-sm-12">
+                  <div class="progress">
+                    <div
+                      [style]="{ width: progress3 + '%' }"
+                      class="progress-bar"
+                      role="progressbar"
+                      aria-label="progress3"
+                      aria-valuenow="0"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3 row">
+                <div class="col-sm-12">
+                  <div class="progress">
+                    <div
+                      [style]="{ width: progress4 + '%' }"
+                      class="progress-bar"
+                      role="progressbar"
+                      aria-label="progress4"
+                      aria-valuenow="0"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3 row">
+                <div class="col-sm-12">
+                  <div class="progress">
+                    <div
+                      [style]="{ width: progress5 + '%' }"
+                      class="progress-bar"
+                      role="progressbar"
+                      aria-label="progress5"
+                      aria-valuenow="0"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              Log:
+              <textarea
+                class="form-control code-block"
+                #log_textarea1
+                rows="7"
+                [innerHTML]="logging_message"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="col-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mx-auto shadow mb-4">
+    <div class="row">
+      <div class="col-1"></div>
+      <div class="col-10">
+        <div class="card-body">
+          <p class="card-title-HowTo">How to use</p>
+          The <i>'Genomic Data Generation'</i> page will load an interface
+          hosting a lite version of Genomator software for use generating
+          synthetic datasets from small genomic VCF datafiles.<br />
+
+          The page will load and then present an interface with a series of
+          options to be specified in order to configure the process of synthetic
+          data generation:
+
+          <ul class="bullet-list list-unstyled pl-0">
+            <li>
+              <b>Upload VCF file</b> - You will need to upload and tell the
+              software a bit about your VCF data (compatibility upto
+              <a href="https://samtools.github.io/hts-specs/VCFv4.3.pdf"
+                >VCF specification 4.3</a
+              >)
+            </li>
+            <li>
+              <b>Choose a Cluster Group Size</b> - Please indicate the 'Cluster
+              Group Size' parameter of the Genomator algorithm, as an integer
+              greater than '1' and less than the number of datapoint rows in the
+              input CSV input. This parameter controls how much flexibility
+              Genomator has to introduce variation in the data generation
+              process (a Cluster Group Size of '1' causes total reproduction of
+              input data) - a default Cluster group size is '10'.
+            </li>
+            <li>
+              <b>How much looseness should the process involve?</b> - a number
+              between 0 and 1, controlling the number of constraints that are
+              randomly dropped in the generation process, more directly adds
+              flexibility into the generation process, default of zero.
+            </li>
+            <li>
+              <b>How much should rare pairs be attenuated?</b> - a number
+              greater than zero; for a given cluster size, if any pair of
+              features falls below this frequency should the algorithm try to
+              ensure it will not appear the synthetic output, default of zero -
+              ensuring only features that occur zero times in the input cluster
+              are not appearing in the synthetic data output.
+            </li>
+            <li>
+              <b>How many Synthetic Data points?</b> - Please then indicate how
+              many synthetic data points you would like Genomator to generate
+            </li>
+          </ul>
+
+          <div class="card mx-auto shadow mb-4">
+            <div class="row">
+              <div class="col-1"></div>
+              <div class="col-10">
+                <b><u>EXAMPLE:</u></b> Consider the dataset of 805 SNPs used by
+                <a href="https://doi.org/10.1371/journal.pgen.1009303"
+                  >Yelmen et.al</a
+                >
+                per their
+                <a
+                  href="https://gitlab.inria.fr/ml_genetics/public/artificial_genomes"
+                  >repository</a
+                >. This dataset can be converted into a VCF file:
+                <a href="assets/805_SNP_1000G_real.vcf"
+                  >805_SNP_1000G_real.vcf</a
+                >.<br />
+                We generate synthetic data from this VCF file, with a cluster
+                group size of '10', '0' looseness and attenuation, and '1000'
+                synthetic data points, as shown:<br />
+                <img
+                  src="assets/805_SNP_1000G_real_config.png"
+                  style="width: 100%; max-width: 385px"
+                /><br />
+                After generating this synthetic data, we can plot the synthetic
+                data on the two largest principle components of the source
+                dataset (doing PCA analysis), gives the following plot:
+                <img
+                  src="assets/805_SNP_1000G_real.png"
+                  style="width: 100%; max-width: 833px"
+                /><br />
+                In this plot we can see that the synthetic data (shown in blue)
+                has good coincidence with the source dataset (shown in red), at
+                reproducing the major components of human genomic variation in
+                this small 805 SNP dataset.
+                <hr />
+                <button class="btn btn-primary1" (click)="loadExample()">
+                  Run with Example data
+                </button>
+                <br />
+              </div>
+            </div>
+          </div>
+
+          <hr />
+          Please note that this is a Lite version of the full Genomator
+          software, and not optimised for large VCF loading and generation.<br />
+          The underlying Python source of the software being run on this page is
+          able to be downloaded and run separately:<br /><br />
+
+          <button
+            id="example-results"
+            class="btn btn-primary2 btn-sm"
+            (click)="redirect('assets/genomator_mini.py')"
+          >
+            <fa-icon [icon]="faPython"></fa-icon> Source</button
+          ><br /><br />
+
+          <div class="col-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mx-auto shadow mb-4">
+    <div class="row">
+      <div class="col-1"></div>
+      <div class="col-10">
+        <div class="card-body">
+          <h4>License</h4>
+
+          Copyright (c) 2025 Commonwealth Scientific and Industrial Research
+          Organisation (CSIRO) ABN 41 687 119 230.<br />
+          <br />
+          CSIRO hereby grants you a non-exclusive, non-transferable, free of
+          charge right to copy, modify, merge, publish, distribute, and
+          sublicense this software for the sole purpose of performing
+          non-commercial scientific research, non-commercial education, or
+          non-commercial research projects.<br />
+          <br />
+          Any other use, in particular any use for commercial purposes, is
+          prohibited. This includes, without limitation, incorporation in a
+          commercial product, use in a commercial service, or production of
+          other artefacts for commercial purposes.<br />
+          <br />
+          Neither the name of CSIRO nor the names of its authors may be used to
+          endorse or promote products derived from this software without
+          specific prior written permission of CSIRO.<br />
+          <br />
+          NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+          GRANTED BY THIS LICENSE. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT
+          WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+          THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+          AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR CSIRO BE LIABLE
+          FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+          CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+          WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.<br />
+          <br />
+          You understand and agree that the authors and/or CSIRO are under no
+          obligation to provide either maintenance services, update services,
+          notices of latent defects, or corrections of defects with regard to
+          the Software.<br />
+          <br />
+          The Software may contain third party material obtained by CSIRO under
+          licence. Your rights to such material as part of the Software under
+          this agreement is subject to any separate licence terms identified by
+          CSIRO as part of the Software release - including as part of the
+          Supplementary Licence, or as a separate file. Those third party
+          licence terms may require you to download the relevant software from a
+          third party site, or may mean that the third party licensor (and not
+          CSIRO) grants you a licence directly for those components of the
+          Software. It is your responsibility to ensure that you have the
+          necessary rights to such third party material.
+
+          <div class="col-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
