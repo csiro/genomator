@@ -238,6 +238,15 @@ export class GenomicComponent implements OnInit {
     }
   }
 
+  // Prevent non-numeric keypresses to satisfy CSP (no inline handlers)
+  allowNumberOnly(event: KeyboardEvent) {
+    const allowed = ['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'];
+    if (allowed.includes(event.key)) return;
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
   async submitJob() {
     if (!this.pyodideService.isLoaded()) {
       return;

@@ -135,7 +135,7 @@
                     type="number"
                     min="1"
                     step="1"
-                    onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))"
+                    (keypress)="allowNumberOnly($event)"
                     formControlName="cluster_group_size"
                     class="form-control"
                     required
@@ -207,7 +207,7 @@
                     type="number"
                     min="1"
                     step="1"
-                    onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))"
+                    (keypress)="allowNumberOnly($event)"
                     formControlName="number_of_data"
                     class="form-control"
                     required
