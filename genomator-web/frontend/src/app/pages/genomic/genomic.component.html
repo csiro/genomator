@@ -1,7 +1,7 @@
 <div class="my-container">
   <div class="card mx-auto shadow my-4">
     <div class="row">
-      <div class="col-10 offset-1">
+      <div class="col-10 mx-auto">
         <b><u>Please note</u></b> that this is a lite version of Genomator
         software and is not designed to most effectively handle large VCF files.
         For larger and more difficult applications please visit out
@@ -21,8 +21,7 @@
 
   <div class="card mx-auto shadow mb-4 card-with-top-gap">
     <div class="row">
-      <div class="col-1"></div>
-      <div class="col-10">
+      <div class="col-10 mx-auto">
         <div class="card-body">
           <h3 class="card-title-DataSubmission">Genomic Data Generation</h3>
           <br />
@@ -75,44 +74,40 @@
               Choose generation profile:
               <hr />
               <div class="mb-3 row">
-                <div class="col-sm-3">
+                <div class="col-12 col-xl-3 mb-2 mb-xl-0">
                   <button
                     type="submit"
-                    class="btn btn-primary1"
-                    style="width: 290px"
+                    class="btn btn-primary1 w-100"
                     [class.active]="mode === ParamMode.Balanced"
                     (click)="setMode(ParamMode.Balanced)"
                   >
                     Balanced accuracy and privacy
                   </button>
                 </div>
-                <div class="col-sm-3">
+                <div class="col-12 col-xl-3 mb-2 mb-xl-0">
                   <button
                     type="submit"
-                    class="btn btn-primary1"
-                    style="width: 290px"
+                    class="btn btn-primary1 w-100"
                     [class.active]="mode === ParamMode.HighAccuracy"
                     (click)="setMode(ParamMode.HighAccuracy)"
                   >
                     High accuracy and low privacy
                   </button>
                 </div>
-                <div class="col-sm-3">
+                <div class="col-12 col-xl-3 mb-2 mb-xl-0">
                   <button
                     type="submit"
-                    class="btn btn-primary1"
-                    style="width: 290px"
+                    class="btn btn-primary1 w-100"
                     [class.active]="mode === ParamMode.HighPrivacy"
                     (click)="setMode(ParamMode.HighPrivacy)"
                   >
                     High privacy and low accuracy
                   </button>
                 </div>
-                <div class="col-sm-3">
+                <div class="col-12 col-xl-3">
                   <button
                     type="submit"
-                    class="btn btn-primary1"
-                    style="width: 290px"
+                    class="btn btn-primary1 w-100"
                     [class.active]="mode === ParamMode.Advanced"
                     (click)="setMode(ParamMode.Advanced)"
                   >
@@ -226,31 +221,27 @@
               </div>
 
               <br /><br />
-              <div class="mb-3 row">
-                <div class="col-sm-3 offset-3">
-                  <button
-                    type="submit"
-                    class="btn btn-primary1"
-                    (click)="submitJob()"
-                    [disabled]="disableSubmit"
-                  >
-                    Generate Synthetic Data
-                  </button>
-                </div>
+              <div class="mb-3 col-12">
+                <button
+                  type="submit"
+                  class="btn btn-primary1 mx-auto d-block w-100"
+                  (click)="submitJob()"
+                  [disabled]="disableSubmit"
+                >
+                  Generate Synthetic Data
+                </button>
               </div>
             </form>
 
             <br />
-            <div class="mb-3 row">
-              <div class="col-sm-3 offset-3">
-                <button
-                  class="btn btn-primary1"
-                  (click)="downloadResults()"
-                  [disabled]="disableDownload"
-                >
-                  Download Results
-                </button>
-              </div>
+            <div class="mb-3 col-12">
+              <button
+                class="btn btn-primary1 mx-auto d-block w-100"
+                (click)="downloadResults()"
+                [disabled]="disableDownload"
+              >
+                Download Results
+              </button>
             </div>
 
             <br />
@@ -406,8 +397,7 @@
 
           <div class="card mx-auto shadow mb-4">
             <div class="row">
-              <div class="col-1"></div>
-              <div class="col-10">
+              <div class="col-10 mx-auto">
                 <b><u>EXAMPLE:</u></b> Consider the dataset of 805 SNPs used by
                 <a href="https://doi.org/10.1371/journal.pgen.1009303"
                   >Yelmen et.al</a
@@ -439,9 +429,14 @@
                 reproducing the major components of human genomic variation in
                 this small 805 SNP dataset.
                 <hr />
-                <button class="btn btn-primary1" (click)="loadExample()">
-                  Run with Example data
-                </button>
+                <div class="col-12">
+                  <button
+                    class="btn btn-primary1 mx-auto d-block w-100"
+                    (click)="loadExample()"
+                  >
+                    Run with Example data
+                  </button>
+                </div>
                 <br />
               </div>
             </div>
