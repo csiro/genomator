@@ -50,6 +50,7 @@ export class GenomicComponent implements OnInit {
   protected progress4: number = 0;
   protected progress5: number = 0;
   protected file: File | null = null;
+  protected spikeFileContent: Array<Array<string>> | null = null;
   protected ParamMode = ParamMode;
   protected mode: ParamMode = ParamMode.Advanced;
   @ViewChild('log_textarea1') myTextArea!: ElementRef;
@@ -88,6 +89,7 @@ export class GenomicComponent implements OnInit {
           Validators.compose([Validators.required])
         ),
         filePicker: new FormControl(''),
+        spikeFilePicker: new FormControl(''),
       },
       []
     );
@@ -155,6 +157,7 @@ export class GenomicComponent implements OnInit {
     }
     this.form.get('number_of_data').enable();
     this.form.get('filePicker').enable();
+    this.form.get('spikeFilePicker').enable();
   }
 
   // callback for file selection - need to store the File object
@@ -173,6 +176,34 @@ export class GenomicComponent implements OnInit {
       return;
     }
     this.file = file;
+  }
+
+  handleSpikePick(e: Event) {
+    const files = (e.target as HTMLInputElement).files ?? new FileList();
+    if (files.length == 0) {
+      return;
+    }
+    if (files.length > 1) {
+      alert('Cannot provide more than one file at a time.');
+      return;
+    }
+    const file: File = files.item(0)!;
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      alert('File extension did not match .csv');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event: any) => {
+      const text = event.target.result;
+      const lines = text.trim().split('\n');
+      const rows: Array<Array<string>> = lines.map((line: string) =>
+        line.trim().split(',')
+      );
+      this.spikeFileContent = rows.sort(
+        (a, b) => parseInt(a[1], 10) - parseInt(b[1], 10)
+      );
+    };
+    reader.readAsText(file);
   }
 
   setProgressString(s: string) {
@@ -236,6 +267,155 @@ export class GenomicComponent implements OnInit {
       this.logging_message = `Error: ${err}`;
       this.scrollToBottom();
     }
+  }
+
+  mergeTwoSortedArrays(arr1: any[], arr2: any[]) {
+    const merged: any[] = [];
+    let i = 0;
+    let j = 0;
+
+    while (i < arr1.length && j < arr2.length) {
+      if (parseInt(arr1[i][1], 10) < parseInt(arr2[j][1], 10)) {
+        merged.push(arr1[i]);
+        i++;
+      } else {
+        merged.push(arr2[j]);
+        j++;
+      }
+    }
+
+    // Append remaining elements
+    while (i < arr1.length) {
+      merged.push(arr1[i]);
+      i++;
+    }
+    while (j < arr2.length) {
+      merged.push(arr2[j]);
+      j++;
+    }
+
+    return merged;
+  }
+
+  async downloadSpikedResults() {
+    try {
+      const filename = 'vcf_output.vcf';
+      const dataArray = this.pyodideService.readFile(filename);
+      const stringData = new TextDecoder().decode(dataArray);
+      const vcfLines = stringData
+        .split('\n')
+        .map((line: string) => line.split('\t'));
+
+      // For testing, use hardcoded VCF lines
+      // const vcfLines = [
+      //   '##vcf',
+      //   '##fileformat=VCFv4.2',
+      //   '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSMPL1',
+      //   '1\t10177\trs367896724\tA\tAC\t100\tPASS\t.\t.\t0/1',
+      //   '1\t10352\trs555500075\tT\tTA\t100\tPASS\t.\t.\t0/0',
+      //   '1\t14389100\trs555500175\tG\tA\t100\tPASS\t.\t.\t0/1',
+      //   '1\t14389500\ttrs555500275\tG\tA\t100\tPASS\t.\t.\t1/1',
+      //   '2\t14389200\ttrs555500275\tG\tA\t100\tPASS\t.\t.\t1/1',
+      // ].map((line) => line.split('\t'));
+
+      if (!this.spikeFileContent) {
+        alert('No spike file loaded.');
+        return;
+      }
+      const vcfHeader = vcfLines.filter((line) => line[0].startsWith('#'));
+      const vcfDataLines = vcfLines.filter((line) => !line[0].startsWith('#'));
+      const vcfDataRowLength = vcfDataLines[0].length;
+      const vcfLinesByChrom: any = vcfDataLines.reduce(
+        (acc: any, line: any) => {
+          const chrom = line[0];
+          if (!acc[chrom]) {
+            acc[chrom] = [];
+          }
+          acc[chrom].push(line);
+          return acc;
+        },
+        {}
+      );
+
+      console.log(vcfLinesByChrom);
+
+      const spikesByChrom = this.spikeFileContent.reduce(
+        (acc: any, spike: any) => {
+          if (!acc[spike[0]]) {
+            acc[spike[0]] = [];
+          }
+          acc[spike[0]].push(spike);
+          acc[spike[0]].sort((a: any, b: any) => a[1] - b[1]);
+          return acc;
+        },
+        {}
+      );
+      console.log(spikesByChrom);
+
+      for (const lines of Object.values(spikesByChrom)) {
+        for (const line of lines as any[]) {
+          console.log(line);
+          if (line.length !== vcfDataRowLength) {
+            alert(
+              `Spike file's line length ${line.length} does not match VCF data line length ${vcfDataRowLength}.`
+            );
+            return;
+          }
+        }
+      }
+
+      console.log('Starting spiking process...');
+
+      const spikedVcf = [...vcfHeader];
+
+      for (const chrom in vcfLinesByChrom) {
+        console.log(`Processing chromosome: ${chrom}`);
+
+        if (!spikesByChrom[chrom]) {
+          console.log(`No spikes for chromosome: ${chrom}`);
+          spikedVcf.push(...vcfLinesByChrom[chrom]);
+          continue;
+        }
+
+        const mergedLines = this.mergeTwoSortedArrays(
+          vcfLinesByChrom[chrom],
+          spikesByChrom[chrom]
+        );
+        spikedVcf.push(...mergedLines);
+
+        console.log(`Finished chromosome: ${chrom}`);
+      }
+
+      console.log('Spiking process completed.');
+      console.log(spikedVcf);
+
+      const blob = new Blob(
+        [spikedVcf.map((line) => line.join('\t')).join('\n')],
+        {
+          type: 'text/plain',
+        }
+      );
+
+      // Create download link and simulate click
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      this.logging_message = `Error: ${err}`;
+      this.scrollToBottom();
+    }
+  }
+
+  clearSpikeFile(e: Event) {
+    e.preventDefault();
+    this.spikeFileContent = null;
+    this.form.patchValue({
+      spikeFilePicker: '',
+    });
   }
 
   // Prevent non-numeric keypresses to satisfy CSP (no inline handlers)
