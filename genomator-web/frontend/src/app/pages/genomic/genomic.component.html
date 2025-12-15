@@ -1,3 +1,52 @@
+<!-- Modal -->
+<div
+  class="modal fade"
+  id="exampleModal"
+  tabindex="-1"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">
+          Spike file content
+        </h1>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        Spike CSV file should contain rows of comma-separated values, where each
+        row represents a genomic variant to be spiked into the synthetic data.
+        Each row must include the 8 mandatory fields of VCF followed by number
+        of samples matching the synthetic data points that you are requesting.
+        For example, if you are spiking a synthetic dataset with 10 data points,
+        with 4 variants, it should look like below.
+
+        <br />
+        <br />
+
+        <pre>
+          <code>
+1,10000007,.,G,A,100,PASS,.,.,0|1,0|1,0|1,0|1,0|1,0|1,0|1,0|1,0|1,0|1
+1,10000277,.,G,A,100,PASS,.,.,0|1,0|1,0|1,0|1,0|1,0|1,0|1,0|1,0|1,0|1
+1,30240935,.,G,A,100,PASS,.,.,0|1,0|1,0|1,0|1,0|1,0|1,0|1,0|1,0|1,0|1
+1,31240937,.,G,A,100,PASS,.,.,0|1,0|1,0|1,0|1,0|1,0|1,0|1,0|1,0|1,0|1
+</code>
+        </pre>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="my-container">
   <div class="card mx-auto shadow my-4">
     <div class="row">
@@ -73,6 +122,14 @@
               <div class="mb-3 row">
                 <label for="spikeFilePicker" class="col-sm-3 col-form-label">
                   <strong>Optional Spike CSV file:</strong>
+                  <button
+                    type="button"
+                    class="btn btn-link"
+                    data-bs-toggle="modal"
+                    data-bs-target="#exampleModal"
+                  >
+                    Info
+                  </button>
                   <button
                     *ngIf="spikeFileContent"
                     class="btn btn-link"
@@ -262,30 +319,30 @@
                 </button>
               </div>
             </form>
+            <div *ngIf="!disableDownload">
+              <br />
+              <div class="mb-3 col-12">
+                <button
+                  class="btn btn-primary1 mx-auto d-block w-100"
+                  (click)="downloadResults()"
+                  [disabled]="disableDownload"
+                >
+                  Download Results
+                </button>
+              </div>
 
-            <br />
-            <div class="mb-3 col-12">
-              <button
-                class="btn btn-primary1 mx-auto d-block w-100"
-                (click)="downloadResults()"
-                [disabled]="disableDownload"
-              >
-                Download Results
-              </button>
+              <br />
+              <div class="mb-3 col-12">
+                <button
+                  type="submit"
+                  class="btn btn-primary1 mx-auto d-block w-100"
+                  (click)="downloadSpikedResults()"
+                  [disabled]="disableDownload || !spikeFileContent"
+                >
+                  Download Spiked Results
+                </button>
+              </div>
             </div>
-
-            <br />
-            <div class="mb-3 col-12">
-              <button
-                type="submit"
-                class="btn btn-primary1 mx-auto d-block w-100"
-                (click)="downloadSpikedResults()"
-                [disabled]="disableDownload || !spikeFileContent"
-              >
-                Download Spiked Results
-              </button>
-            </div>
-
             <br />
             <div *ngIf="!disableLog">
               <hr />
