@@ -20,6 +20,37 @@ enum ParamMode {
   Advanced = 'Advanced',
 }
 
+const mergeTwoSortedArrays = (arr1: any[], arr2: any[]) => {
+  console.log('Merging two sorted arrays...');
+  const merged: any[] = [];
+  let i = 0;
+  let j = 0;
+
+  while (i < arr1.length && j < arr2.length) {
+    if (parseInt(arr1[i][1], 10) < parseInt(arr2[j][1], 10)) {
+      merged.push(arr1[i]);
+      i++;
+    } else {
+      merged.push(arr2[j]);
+      j++;
+    }
+  }
+
+  // Append remaining elements
+  while (i < arr1.length) {
+    merged.push(arr1[i]);
+    i++;
+  }
+  while (j < arr2.length) {
+    merged.push(arr2[j]);
+    j++;
+  }
+
+  console.log('Merging completed.');
+
+  return merged;
+};
+
 @Component({
   host: { class: 'page-content' },
   selector: 'app-submit',
@@ -269,34 +300,6 @@ export class GenomicComponent implements OnInit {
     }
   }
 
-  mergeTwoSortedArrays(arr1: any[], arr2: any[]) {
-    const merged: any[] = [];
-    let i = 0;
-    let j = 0;
-
-    while (i < arr1.length && j < arr2.length) {
-      if (parseInt(arr1[i][1], 10) < parseInt(arr2[j][1], 10)) {
-        merged.push(arr1[i]);
-        i++;
-      } else {
-        merged.push(arr2[j]);
-        j++;
-      }
-    }
-
-    // Append remaining elements
-    while (i < arr1.length) {
-      merged.push(arr1[i]);
-      i++;
-    }
-    while (j < arr2.length) {
-      merged.push(arr2[j]);
-      j++;
-    }
-
-    return merged;
-  }
-
   async downloadSpikedResults() {
     try {
       const filename = 'vcf_output.vcf';
@@ -337,8 +340,6 @@ export class GenomicComponent implements OnInit {
         {}
       );
 
-      console.log(vcfLinesByChrom);
-
       const spikesByChrom = this.spikeFileContent.reduce(
         (acc: any, spike: any) => {
           if (!acc[spike[0]]) {
@@ -350,11 +351,9 @@ export class GenomicComponent implements OnInit {
         },
         {}
       );
-      console.log(spikesByChrom);
 
       for (const lines of Object.values(spikesByChrom)) {
         for (const line of lines as any[]) {
-          console.log(line);
           if (line.length !== vcfDataRowLength) {
             alert(
               `Spike file's line length ${line.length} does not match VCF data line length ${vcfDataRowLength}.`
@@ -377,17 +376,19 @@ export class GenomicComponent implements OnInit {
           continue;
         }
 
-        const mergedLines = this.mergeTwoSortedArrays(
+        const mergedLines = mergeTwoSortedArrays(
           vcfLinesByChrom[chrom],
           spikesByChrom[chrom]
         );
-        spikedVcf.push(...mergedLines);
+
+        for (const line of mergedLines) {
+          spikedVcf.push(line);
+        }
 
         console.log(`Finished chromosome: ${chrom}`);
       }
 
       console.log('Spiking process completed.');
-      console.log(spikedVcf);
 
       const blob = new Blob(
         [spikedVcf.map((line) => line.join('\t')).join('\n')],
