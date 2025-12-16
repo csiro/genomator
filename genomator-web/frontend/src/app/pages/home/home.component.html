@@ -11,19 +11,21 @@
           </div>
           <div class="card-text">
             Genomator makes synthetic data by process of logical deduction so
-            that it has properties observed in an uploaded real dataset<br />
+            that it has properties observed in an uploaded real dataset.<br />
             Genomator is designed to generate Genome data (in VCF format), but
-            can handle tabular data (in CSV format)<br />
+            can handle tabular data (in CSV format).<br /><br />
             A Lite version of Genomator can be run in the browser and on this
             site.<br />
-            Upload your data here and click to generate synthetic data.<br />
-            For research inquiries, contact our
-            <a href="https://bioinformatics.csiro.au/get-in-touch/"
-              >research team</a
-            >, and/or for commercial applications please
-            <a href="https://www.csiro.au/en/work-with-us/services"
+            <br />
+
+            For research and commercial applications inquiries please
+            <a
+              href="https://bioinformatics.csiro.au/get-in-touch/"
+              target="_blank"
               >contact us</a
-            >.<br /><br /><br />
+            >.
+
+            <br /><br /><br />
           </div>
           <!-- <h3 class="card-title-SubmitJob">Make Synthetic Tabular Data:</h3>
           <div class="card-text">
@@ -162,7 +164,9 @@
             <button
               id="example-results"
               class="btn btn-primary2 btn-sm"
-              (click)="redirect('https://arxiv.org/abs/2410.16705')"
+              (click)="
+                redirect('https://doi.org/10.1093/bioinformatics/btaf600')
+              "
             >
               <fa-icon [icon]="faBook"></fa-icon> Publication</button
             ><br /><br />
@@ -363,13 +367,24 @@
               <fa-icon [icon]="faGithub"></fa-icon> GitHub</button
             ><br />
 
-            Further information can be found in the publication:<br /><button
+            Further information can be found in the publication:<br />
+            <!-- <button
               id="example-results"
               class="btn btn-primary2 btn-sm"
               (click)="redirect('https://arxiv.org/abs/2410.16705')"
             >
-              <fa-icon [icon]="faBook"></fa-icon> Publication</button
-            ><br /><br />
+              <fa-icon [icon]="faBook"></fa-icon> Pre-print
+            </button> -->
+            <button
+              id="example-results"
+              class="btn btn-primary2 btn-sm"
+              (click)="
+                redirect('https://doi.org/10.1093/bioinformatics/btaf600')
+              "
+            >
+              <fa-icon [icon]="faBook"></fa-icon> Publication
+            </button>
+            <br /><br />
           </div>
           <div class="col-1"></div>
         </div>
