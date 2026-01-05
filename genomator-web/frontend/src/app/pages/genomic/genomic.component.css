@@ -98,7 +98,7 @@
   width: 319px;
   height: 49px;
   border-radius: 50px;
-  background: #00A9CE;
+  background: #00758F;
   font-family: Poppins;
   /* Add other styles if needed */
 }
@@ -112,7 +112,7 @@
   height: 35px;
   flex-shrink: 0;
   border-radius: 50px;
-  background: #00A9CE;
+  background: #00758F;
   margin-right: 10px;
   color: rgba(255, 255, 255, 0.90);
   text-align: center;
@@ -156,8 +156,8 @@
 
 /* Custom style for the checked toggle */
 .form-check-input:checked {
-  background-color: #00A9CE; /* Change this to the desired color */
-  border-color: #00A9CE; /* Change this to match the background color or a different color if preferred */
+  background-color: #00758F; /* Change this to the desired color */
+  border-color: #00758F; /* Change this to match the background color or a different color if preferred */
 }
 
 /* Media query for smaller screens (adjust the max-width as needed) */
@@ -176,7 +176,7 @@
   height: 100%;
   flex-shrink: 0;
   border-radius: 50px;
-  background: #00A9CE;
+  background: #00758F;
   margin-right: 20px;
   color: rgba(255, 255, 255, 0.90);
   text-align: center;
