@@ -163,3 +163,8 @@ body{
   padding-right:30px;
   text-align: right;
 }
+
+.parameter-list-item {
+  font-size: 18px;
+  font-weight: bold;
+}

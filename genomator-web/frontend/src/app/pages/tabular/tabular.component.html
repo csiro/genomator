@@ -30,7 +30,6 @@
             Loading Status:
             <div
               class="alert alert-secondary"
-              role="alert"
               [textContent]="loadingStatus"
             ></div>
           </div>
@@ -188,11 +187,7 @@
             <div *ngIf="!disableLog">
               <hr />
               Status:
-              <div
-                [class]="statusClass"
-                role="alert"
-                [textContent]="status"
-              ></div>
+              <div [class]="statusClass" [textContent]="status"></div>
               <div class="mb-3 row">
                 <div class="col-sm-12">
                   <div class="progress">
@@ -278,6 +273,7 @@
                 <br />
                 <img
                   src="assets/csv_example.png"
+                  alt="Screenshot of CSV example"
                   style="width: 100%; max-width: 832px"
                 /><br />
                 <br />
@@ -327,6 +323,7 @@
                 synthetic datapoints, as shown:<br />
                 <img
                   src="assets/catdog_config.png"
+                  alt="Screenshot of configuration"
                   style="width: 100%; max-width: 327px"
                 /><br /><br />
 
@@ -334,6 +331,7 @@
                 yields downloadable CSV data which can be plotted as shown:<br />
                 <img
                   src="assets/catdog.png"
+                  alt="Screenshot of PCA plot"
                   style="width: 100%; max-width: 605px"
                 /><br />
                 On this plot we can see that the input source data (dogs and

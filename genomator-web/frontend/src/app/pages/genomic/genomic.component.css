@@ -202,3 +202,7 @@
 .btn-primary1:active {
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08); /* Adjust the shadow values as needed */
 }
+
+.btn-primary1.active {
+  border: solid 2px black;
+}
