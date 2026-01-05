@@ -1,8 +1,7 @@
 <div class="my-container">
   <div class="card mx-auto shadow mb-4">
     <div class="row">
-      <div class="col-1"></div>
-      <div class="col-10">
+      <div class="col-10 mx-auto">
         <b><u>Please note</u></b> that this is a lite version of Genomator
         software and is not designed to most effectively handle large files. For
         larger and more difficult applications please visit out
@@ -16,8 +15,7 @@
 
   <div class="card mx-auto shadow mb-4 card-with-top-gap">
     <div class="row">
-      <div class="col-1"></div>
-      <div class="col-10">
+      <div class="col-10 mx-auto">
         <div class="card-body">
           <h3 class="card-title-DataSubmission">Tabular Data Generation</h3>
           <br />
@@ -221,8 +219,7 @@
 
   <div class="card mx-auto shadow mb-4">
     <div class="row">
-      <div class="col-1"></div>
-      <div class="col-10">
+      <div class="col-10 mx-auto">
         <div class="card-body">
           <p class="card-title-HowTo">How to use</p>
           The <i>'Tabular Data Generation'</i> page will load an interface
@@ -352,15 +349,14 @@
           The underlying Python source of the software being run on this page is
           able to be downloaded and run separately:<br /><br />
 
-          <button
+          <a
             id="example-results"
             class="btn btn-primary2 btn-sm"
-            (click)="redirect('assets/genomator_mini_tabular.py')"
+            href="assets/genomator_mini_tabular.py"
+            target="_blank"
           >
-            <fa-icon [icon]="faPython"></fa-icon> Source</button
-          ><br /><br />
-
-          <div class="col-1"></div>
+            <fa-icon [icon]="faPython"></fa-icon> Source
+          </a>
         </div>
       </div>
     </div>

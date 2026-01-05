@@ -80,13 +80,14 @@
             This website has Lite versions of Genomator for generating VCF and
             CSV datasets, however see Github repository for source-code and the
             optimised full-featured implementation<br /><br />
-            <button
+            <a
               id="example-results"
               class="btn btn-primary2 btn-sm"
-              (click)="redirect('https://github.com/aehrc/genomator')"
+              href="https://github.com/aehrc/genomator"
+              target="_blank"
             >
               <fa-icon [icon]="faGithub"></fa-icon> GitHub
-            </button>
+            </a>
             <br /><br />
             <hr />
             <br />
@@ -181,19 +182,15 @@
             These qualities can be contrasted and compared with other
             Machine-Learning and statistical techniques.<br /><br />
             See:
-            <button
-              id="example-results"
+            <a
               class="btn btn-primary2 btn-sm"
-              (click)="
-                redirect('https://doi.org/10.1093/bioinformatics/btaf600')
-              "
+              href="https://doi.org/10.1093/bioinformatics/btaf600"
+              target="_blank"
             >
-              <fa-icon [icon]="faBook"></fa-icon> Publication</button
-            ><br /><br />
-            <br />
-            <hr />
-            <br />
+              <fa-icon [icon]="faBook"></fa-icon> Publication
+            </a>
           </div>
+          <br />
           <h2 class="card-title-SubmitJob">How does Genomator work?</h2>
           <div class="card-text">
             Genomator constructs synthetic data by formulating a logical problem
@@ -381,32 +378,23 @@
             controlled by the interplay in specifying these variables.<br /><br />
             The full version of the Genomator software is available from the
             software repository:<br />
-            <button
-              id="example-results"
+            <a
               class="btn btn-primary2 btn-sm"
-              (click)="redirect('https://github.com/aehrc/genomator')"
+              href="https://github.com/aehrc/genomator"
+              target="_blank"
             >
-              <fa-icon [icon]="faGithub"></fa-icon> GitHub</button
-            ><br />
+              <fa-icon [icon]="faGithub"></fa-icon> GitHub
+            </a>
+            <br />
 
             Further information can be found in the publication:<br />
-            <!-- <button
-              id="example-results"
+            <a
               class="btn btn-primary2 btn-sm"
-              (click)="redirect('https://arxiv.org/abs/2410.16705')"
-            >
-              <fa-icon [icon]="faBook"></fa-icon> Pre-print
-            </button> -->
-            <button
-              id="example-results"
-              class="btn btn-primary2 btn-sm"
-              (click)="
-                redirect('https://doi.org/10.1093/bioinformatics/btaf600')
-              "
+              href="https://doi.org/10.1093/bioinformatics/btaf600"
+              target="_blank"
             >
               <fa-icon [icon]="faBook"></fa-icon> Publication
-            </button>
-            <br /><br />
+            </a>
           </div>
           <div class="col-1"></div>
         </div>

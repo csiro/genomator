@@ -9,15 +9,12 @@ import { faBook } from '@fortawesome/free-solid-svg-icons';
 import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
-  host: {'class': 'page-content'},
+  host: { class: 'page-content' },
   selector: 'app-home',
   standalone: true,
-  imports: [
-    RouterLink,
-    FontAwesomeModule
-  ],
+  imports: [RouterLink, FontAwesomeModule],
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+  styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit {
   faGithub = faGithub;
@@ -29,10 +26,5 @@ export class HomeComponent implements OnInit {
     window.scrollTo(0, 0);
   }
 
-  constructor(private router: Router) { }
-
-  redirect(location:string) {
-    document.location = location;
-  }
-
+  constructor(private router: Router) {}
 }

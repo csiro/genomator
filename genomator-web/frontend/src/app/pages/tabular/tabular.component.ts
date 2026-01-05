@@ -211,10 +211,6 @@ export class TabularComponent implements OnInit {
       );
   }
 
-  redirect(location: string) {
-    document.location = location;
-  }
-
   loadExample() {
     if (this.loading == false) {
       this.disableSubmit = true;
