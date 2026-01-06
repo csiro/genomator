@@ -1,5 +1,30 @@
 <app-nav-bar></app-nav-bar>
 <router-outlet style="display: none"></router-outlet>
 <app-footer></app-footer>
-<div id="particles-js">
-</div>
+
+<div #particles id="particles-js"></div>
+<button
+  type="button"
+  aria-label="play pause animation"
+  title="Action"
+  style="
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background-color: #00758f;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    font-size: 24px;
+  "
+  (click)="toggleAnimation()"
+  data-bs-toggle="tooltip"
+  data-bs-title="Play/Pause Animation"
+>
+  <fa-icon [icon]="faPlayCircle"></fa-icon>
+</button>

@@ -206,3 +206,11 @@
 .btn-primary1.active {
   border: solid 2px black;
 }
+
+.btn-primary1:focus {
+  border: solid 2px red;
+}
+
+.btn-primary2:focus {
+  border: solid 2px red;
+}

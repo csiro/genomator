@@ -59,6 +59,10 @@
   background-color: #00758F; /* Changed background color */
 }
 
+.navbar a.nav-link:focus {
+  border: 2px solid #ffffff;
+}
+
 /* Keep the color for selected links */
 .navbar a.nav-link.active {
   background-color: #00758F;

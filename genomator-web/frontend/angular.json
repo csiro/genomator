@@ -33,9 +33,7 @@
               "src/styles.sass"
             ],
             "scripts": [
-              "node_modules/bootstrap/dist/js/bootstrap.js",
-              "node_modules/particles.js/particles.js"
-
+              "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
             ],
             "allowedCommonJsDependencies": [
               "lodash"

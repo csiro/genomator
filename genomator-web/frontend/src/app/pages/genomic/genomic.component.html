@@ -208,7 +208,7 @@
               Choose generation parameters:
               <hr />
 
-              <div class="mb-3 row">
+              <div class="mb-3 row" aria-live="polite">
                 <label for="cluster_group_size" class="col-sm-3 col-form-label"
                   ><strong>Choose a Cluster Group Size</strong> (ie. N)</label
                 >
@@ -236,7 +236,7 @@
                 </div>
               </div>
 
-              <div class="mb-3 row">
+              <div class="mb-3 row" aria-live="polite">
                 <label for="looseness" class="col-sm-3 col-form-label"
                   ><strong
                     >How much looseness should the process involve?</strong
@@ -258,7 +258,7 @@
                 </div>
               </div>
 
-              <div class="mb-3 row">
+              <div class="mb-3 row" aria-live="polite">
                 <label for="exception_space" class="col-sm-3 col-form-label"
                   ><strong
                     >How how much should rare pairs be attenuated?</strong
@@ -280,7 +280,7 @@
                 </div>
               </div>
 
-              <div class="mb-3 row">
+              <div class="mb-3 row" aria-live="polite">
                 <label for="number_of_data" class="col-sm-3 col-form-label"
                   ><strong>How many Synthetic Data Points?</strong></label
                 >
@@ -309,7 +309,7 @@
               </div>
 
               <br /><br />
-              <div class="mb-3 col-12">
+              <div class="mb-3 col-12" aria-live="polite">
                 <button
                   type="submit"
                   class="btn btn-primary1 mx-auto d-block w-100"
@@ -320,7 +320,7 @@
                 </button>
               </div>
             </form>
-            <div *ngIf="!disableLog">
+            <div *ngIf="!disableLog" aria-live="polite">
               <hr />
               Status:
               <div
@@ -340,6 +340,7 @@
                       aria-valuemin="0"
                       aria-valuemax="100"
                       role="progressbar"
+                      [attr.aria-valuenow]="progress1 + '%'"
                     ></div>
                   </div>
                 </div>
@@ -356,6 +357,7 @@
                       aria-valuemin="0"
                       aria-valuemax="100"
                       role="progressbar"
+                      [attr.aria-valuenow]="progress2 + '%'"
                     ></div>
                   </div>
                 </div>
@@ -372,6 +374,7 @@
                       aria-valuemin="0"
                       aria-valuemax="100"
                       role="progressbar"
+                      [attr.aria-valuenow]="progress3 + '%'"
                     ></div>
                   </div>
                 </div>
@@ -388,6 +391,7 @@
                       aria-valuemin="0"
                       aria-valuemax="100"
                       role="progressbar"
+                      [attr.aria-valuenow]="progress4 + '%'"
                     ></div>
                   </div>
                 </div>
@@ -404,6 +408,7 @@
                       aria-valuemin="0"
                       aria-valuemax="100"
                       role="progressbar"
+                      [attr.aria-valuenow]="progress5 + '%'"
                     ></div>
                   </div>
                 </div>
@@ -417,7 +422,7 @@
                 [innerHTML]="logging_message"
               ></textarea>
             </div>
-            <div *ngIf="!disableDownload">
+            <div *ngIf="!disableDownload" aria-live="polite">
               <br />
               <div class="mb-3 col-12">
                 <button
