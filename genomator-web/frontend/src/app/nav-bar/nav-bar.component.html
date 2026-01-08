@@ -8,6 +8,7 @@
       [routerLinkActiveOptions]="{ exact: true }"
       [routerLink]="['']"
       [routerLinkActive]="['active']"
+      aria-label="Go to Home"
     >
       <img
         src="assets/L_Genomator_white.png"
@@ -24,6 +25,8 @@
           [routerLinkActiveOptions]="{ exact: true }"
           [routerLink]="['']"
           [routerLinkActive]="['active']"
+          #homeRla="routerLinkActive"
+          [attr.aria-current]="homeRla.isActive ? 'page' : null"
           >Home</a
         >
       </li>
@@ -33,7 +36,25 @@
           class="nav-link"
           [routerLink]="['/genomic']"
           [routerLinkActive]="['active']"
-          >Generate Genomic Data</a
+          #genRla="routerLinkActive"
+          [attr.aria-current]="genRla.isActive ? 'page' : null"
+          aria-label="Generate genomic data"
+          data-bs-toggle="tooltip"
+          data-bs-title="Generate Genomic Data"
+          data-bs-placement="bottom"
+          >Generate</a
+        >
+      </li>
+      <li>
+        <a
+          class="nav-link"
+          href="https://bioinformatics.csiro.au/get-in-touch/"
+          target="_blank"
+          aria-label="Get Help (opens in new tab)"
+          data-bs-toggle="tooltip"
+          data-bs-title="Visit our contact page"
+          data-bs-placement="bottom"
+          >Get Help</a
         >
       </li>
     </ul>
@@ -47,7 +68,7 @@
       aria-expanded="false"
       aria-label="Toggle navigation"
     >
-      <span class="navbar-toggler-icon bg-light"></span>
+      <span class="navbar-toggler-icon bg-light" aria-hidden="true"></span>
     </button>
   </div>
 </nav>
@@ -58,47 +79,59 @@
   tabindex="-1"
   id="navbarOffcanvas"
   aria-labelledby="navbarOffcanvasLabel"
+  role="dialog"
+  aria-modal="true"
 >
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="navbarOffcanvasLabel">Genomator Menu</h5>
     <button
       type="button"
-      class="btn-close text-reset"
+      class="btn-close btn-close-white text-reset"
       data-bs-dismiss="offcanvas"
       aria-label="Close"
     ></button>
   </div>
   <div class="offcanvas-body">
     <!-- Links in Offcanvas Menu -->
-    <ul class="navbar-nav">
-      <li>
-        <a
-          data-bs-dismiss="offcanvas"
-          class="nav-link"
-          [routerLinkActiveOptions]="{ exact: true }"
-          [routerLink]="['']"
-          [routerLinkActive]="['active']"
-          >Home</a
-        >
-      </li>
-      <!-- <li>
-        <a
-          data-bs-dismiss="offcanvas"
-          class="nav-link"
-          [routerLink]="['/tabular']"
-          [routerLinkActive]="['active']"
-          >Generate Tabular Data</a
-        >
-      </li> -->
-      <li>
-        <a
-          data-bs-dismiss="offcanvas"
-          class="nav-link"
-          [routerLink]="['/genomic']"
-          [routerLinkActive]="['active']"
-          >Generate Genomic Data</a
-        >
-      </li>
-    </ul>
+    <nav aria-label="Main navigation">
+      <ul class="navbar-nav">
+        <li>
+          <a
+            data-bs-dismiss="offcanvas"
+            class="nav-link"
+            [routerLinkActiveOptions]="{ exact: true }"
+            [routerLink]="['']"
+            [routerLinkActive]="['active']"
+            #homeOffRla="routerLinkActive"
+            [attr.aria-current]="homeOffRla.isActive ? 'page' : null"
+            >Home</a
+          >
+        </li>
+        <!-- <li>
+          <a
+            data-bs-dismiss="offcanvas"
+            class="nav-link"
+            [routerLink]="['/tabular']"
+            [routerLinkActive]="['active']"
+            >Generate Tabular Data</a
+          >
+        </li> -->
+        <li>
+          <a
+            data-bs-dismiss="offcanvas"
+            class="nav-link"
+            [routerLink]="['/genomic']"
+            [routerLinkActive]="['active']"
+            #genOffRla="routerLinkActive"
+            [attr.aria-current]="genOffRla.isActive ? 'page' : null"
+            aria-label="Generate genomic data"
+            data-bs-toggle="tooltip"
+            data-bs-title="Generate Genomic Data"
+            data-bs-placement="right"
+            >Generate</a
+          >
+        </li>
+      </ul>
+    </nav>
   </div>
 </div>

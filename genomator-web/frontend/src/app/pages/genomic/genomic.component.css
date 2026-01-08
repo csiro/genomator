@@ -205,6 +205,9 @@
 
 .btn-primary1.active {
   border: solid 2px black;
+  /* text black and background white */
+  color: black;
+  background-color: white;
 }
 
 .btn-primary1:focus {

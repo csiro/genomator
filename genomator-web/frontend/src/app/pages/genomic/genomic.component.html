@@ -76,14 +76,35 @@
           <h1 class="card-title-DataSubmission">Genomic Data Generation</h1>
           <br />
 
-          <div *ngIf="loading">
-            <div class="spinner-border" role="status">
-              <span class="sr-only"></span>
+          <div
+            *ngIf="loading"
+            role="region"
+            aria-label="Initializing libraries"
+            aria-live="polite"
+            aria-atomic="true"
+            aria-busy="true"
+          >
+            <div
+              class="spinner-border"
+              role="status"
+              aria-label="Loading libraries"
+              aria-live="polite"
+              aria-busy="true"
+            >
+              <span class="sr-only">Loading…</span>
             </div>
             <br />
             Loading Status:
+            <span class="sr-only" id="loading-status-hint"
+              >Library initialization status updates while loading.</span
+            >
             <div
               class="alert alert-secondary code-block"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              aria-relevant="additions text"
+              aria-describedby="loading-status-hint"
               [innerHTML]="loadingStatus"
             ></div>
           </div>
@@ -159,9 +180,23 @@
               </div>
 
               <br />
-              Choose generation profile:
+              <div role="status" aria-atomic="true">
+                Change generation profile (Selected -
+                <span *ngIf="mode === ParamMode.Balanced"
+                  >Balanced accuracy and privacy</span
+                >
+                <span *ngIf="mode === ParamMode.HighAccuracy"
+                  >High accuracy and low privacy</span
+                >
+                <span *ngIf="mode === ParamMode.HighPrivacy"
+                  >High privacy and low accuracy</span
+                >
+                <span *ngIf="mode === ParamMode.Advanced"
+                  >Advanced Configuration</span
+                >):
+              </div>
               <hr />
-              <div class="mb-3 row" aria-live="polite">
+              <div class="mb-3 row">
                 <div class="col-12 col-xl-3 mb-2 mb-xl-0">
                   <button
                     type="submit"
@@ -208,8 +243,15 @@
               Choose generation parameters:
               <hr />
 
-              <div class="mb-3 row" aria-live="polite">
-                <label for="cluster_group_size" class="col-sm-3 col-form-label"
+              <div
+                class="mb-3 row"
+                role="group"
+                aria-labelledby="cluster_group_size_label"
+              >
+                <label
+                  id="cluster_group_size_label"
+                  for="cluster_group_size"
+                  class="col-sm-3 col-form-label"
                   ><strong>Choose a Cluster Group Size</strong> (ie. N)</label
                 >
                 <div class="col-sm-8">
@@ -218,14 +260,25 @@
                     type="number"
                     min="1"
                     step="1"
+                    inputmode="numeric"
                     (keypress)="allowNumberOnly($event)"
                     formControlName="cluster_group_size"
                     class="form-control"
                     required
+                    [attr.aria-required]="true"
+                    [attr.aria-invalid]="
+                      form.controls.cluster_group_size.invalid
+                        ? 'true'
+                        : 'false'
+                    "
+                    aria-describedby="cluster_group_size_error"
                   />
                   <div
+                    id="cluster_group_size_error"
                     class="invalid-feedback"
                     style="display: block"
+                    role="alert"
+                    aria-live="assertive"
                     *ngIf="
                       form.controls.cluster_group_size.touched &&
                       form.controls.cluster_group_size.invalid
@@ -236,8 +289,15 @@
                 </div>
               </div>
 
-              <div class="mb-3 row" aria-live="polite">
-                <label for="looseness" class="col-sm-3 col-form-label"
+              <div
+                class="mb-3 row"
+                role="group"
+                aria-labelledby="looseness_label"
+              >
+                <label
+                  id="looseness_label"
+                  for="looseness"
+                  class="col-sm-3 col-form-label"
                   ><strong
                     >How much looseness should the process involve?</strong
                   >
@@ -253,13 +313,28 @@
                     formControlName="looseness"
                     class="form-range"
                     required
+                    [attr.aria-required]="true"
+                    aria-orientation="horizontal"
+                    [attr.aria-valuemin]="0"
+                    [attr.aria-valuemax]="1"
+                    [attr.aria-valuenow]="form.value.looseness"
+                    aria-describedby="looseness_value"
                   />
-                  {{ this.form.value.looseness }}
+                  <span id="looseness_value" aria-live="polite">{{
+                    this.form.value.looseness
+                  }}</span>
                 </div>
               </div>
 
-              <div class="mb-3 row" aria-live="polite">
-                <label for="exception_space" class="col-sm-3 col-form-label"
+              <div
+                class="mb-3 row"
+                role="group"
+                aria-labelledby="exception_space_label"
+              >
+                <label
+                  id="exception_space_label"
+                  for="exception_space"
+                  class="col-sm-3 col-form-label"
                   ><strong
                     >How how much should rare pairs be attenuated?</strong
                   >
@@ -275,13 +350,28 @@
                     formControlName="exception_space"
                     class="form-range"
                     required
+                    [attr.aria-required]="true"
+                    aria-orientation="horizontal"
+                    [attr.aria-valuemin]="0"
+                    [attr.aria-valuemax]="5"
+                    [attr.aria-valuenow]="form.value.exception_space"
+                    aria-describedby="exception_space_value"
                   />
-                  {{ this.form.value.exception_space }}
+                  <span id="exception_space_value" aria-live="polite">{{
+                    this.form.value.exception_space
+                  }}</span>
                 </div>
               </div>
 
-              <div class="mb-3 row" aria-live="polite">
-                <label for="number_of_data" class="col-sm-3 col-form-label"
+              <div
+                class="mb-3 row"
+                role="group"
+                aria-labelledby="number_of_data_label"
+              >
+                <label
+                  id="number_of_data_label"
+                  for="number_of_data"
+                  class="col-sm-3 col-form-label"
                   ><strong>How many Synthetic Data Points?</strong></label
                 >
                 <div class="col-sm-8">
@@ -290,20 +380,29 @@
                     type="number"
                     min="1"
                     step="1"
+                    inputmode="numeric"
                     (keypress)="allowNumberOnly($event)"
                     formControlName="number_of_data"
                     class="form-control"
                     required
+                    [attr.aria-required]="true"
+                    [attr.aria-invalid]="
+                      form.controls.number_of_data.invalid ? 'true' : 'false'
+                    "
+                    aria-describedby="number_of_data_error"
                   />
                   <div
+                    id="number_of_data_error"
                     class="invalid-feedback"
                     style="display: block"
+                    role="alert"
+                    aria-live="assertive"
                     *ngIf="
                       form.controls.number_of_data.touched &&
                       form.controls.number_of_data.invalid
                     "
                   >
-                    Please input a positive whole integer value.
+                    Please input a positive integer value.
                   </div>
                 </div>
               </div>
@@ -312,11 +411,19 @@
               <div class="mb-3 col-12" aria-live="polite">
                 <button
                   type="submit"
-                  class="btn btn-primary1 mx-auto d-block w-100"
+                  class="btn btn-primary1 mx-auto d-block w-100 mb-2"
                   (click)="submitJob()"
                   [disabled]="disableSubmit"
+                  aria-label="Generate synthetic data with the chosen parameters"
                 >
                   Generate Synthetic Data
+                </button>
+                <button
+                  class="btn btn-primary1 mx-auto d-block w-100"
+                  (click)="loadExample()"
+                  aria-label="Run generation using preset parameters and data"
+                >
+                  Run with Example Data and Parameters
                 </button>
               </div>
             </form>
@@ -414,21 +521,52 @@
                 </div>
               </div>
               Log:
+              <span class="sr-only" id="log_hint">
+                Log output updates as the pipeline runs and announces when it
+                finishes.
+              </span>
               <textarea
+                id="pipeline-log"
                 class="form-control code-block"
-                role="status"
+                role="log"
                 #log_textarea1
                 rows="7"
+                readonly
+                aria-describedby="log_hint"
+                [attr.aria-label]="
+                  disableDownload
+                    ? 'Log output — pipeline running'
+                    : 'Log output — pipeline finished'
+                "
+                [attr.aria-busy]="disableDownload ? 'true' : 'false'"
+                [attr.aria-live]="disableDownload ? 'polite' : 'assertive'"
+                aria-relevant="additions text"
+                [attr.aria-atomic]="disableDownload ? 'false' : 'true'"
                 [innerHTML]="logging_message"
               ></textarea>
             </div>
-            <div *ngIf="!disableDownload" aria-live="polite">
+            <div
+              *ngIf="!disableDownload"
+              aria-live="polite"
+              role="region"
+              aria-label="Download generated results"
+            >
               <br />
+              <span class="sr-only" id="download-section-hint"
+                >Downloads are enabled when generation finishes.</span
+              >
               <div class="mb-3 col-12">
                 <button
                   class="btn btn-primary1 mx-auto d-block w-100"
                   (click)="downloadResults()"
                   [disabled]="disableDownload"
+                  [attr.aria-disabled]="disableDownload ? 'true' : 'false'"
+                  [attr.aria-label]="
+                    disableDownload
+                      ? 'Results not ready to download'
+                      : 'Download synthetic results'
+                  "
+                  aria-describedby="download-section-hint"
                 >
                   Download Results
                 </button>
@@ -441,6 +579,17 @@
                   class="btn btn-primary1 mx-auto d-block w-100"
                   (click)="downloadSpikedResults()"
                   [disabled]="disableDownload || !spikeFileContent"
+                  [attr.aria-disabled]="
+                    disableDownload || !spikeFileContent ? 'true' : 'false'
+                  "
+                  [attr.aria-label]="
+                    disableDownload || !spikeFileContent
+                      ? !spikeFileContent
+                        ? 'Upload spike CSV to enable spiked results'
+                        : 'Spiked results not ready to download'
+                      : 'Download spiked results'
+                  "
+                  aria-describedby="download-section-hint"
                 >
                   Download Spiked Results
                 </button>
@@ -566,7 +715,7 @@
                     class="btn btn-primary1 mx-auto d-block w-100"
                     (click)="loadExample()"
                   >
-                    Run with Example data
+                    Run with Example Data and Parameters
                   </button>
                 </div>
               </div>

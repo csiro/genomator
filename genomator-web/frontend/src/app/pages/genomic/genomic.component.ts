@@ -495,6 +495,7 @@ export class GenomicComponent implements OnInit {
             exception_space: 0,
             looseness: 0,
           });
+          this.mode = ParamMode.Advanced;
           this.submitJob();
         });
     }
