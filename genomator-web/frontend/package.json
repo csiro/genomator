@@ -30,8 +30,6 @@
     "@material/button": "^14.0.0",
     "@material/card": "^14.0.0",
     "@material/tabs": "^2.3.0",
-    "@popperjs/core": "^2.11.8",
-    "bootstrap": "^5.3.7",
     "d3": "^7.6.1",
     "lodash": "^4.17.21",
     "popper": "^1.0.1",
