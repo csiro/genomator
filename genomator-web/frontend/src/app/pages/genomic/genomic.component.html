@@ -546,15 +546,17 @@
               ></textarea>
             </div>
             <div
-              *ngIf="!disableDownload"
+              [class.visually-hidden]="disableDownload"
               aria-live="polite"
               role="region"
               aria-label="Download generated results"
             >
               <br />
-              <span class="sr-only" id="download-section-hint"
-                >Downloads are enabled when generation finishes.</span
-              >
+              <span class="sr-only" id="download-section-hint">{{
+                disableDownload
+                  ? "Downloads are enabled when generation finishes."
+                  : "Generation finished. Downloads are now available."
+              }}</span>
               <div class="mb-3 col-12">
                 <button
                   class="btn btn-primary1 mx-auto d-block w-100"
@@ -571,8 +573,6 @@
                   Download Results
                 </button>
               </div>
-
-              <br />
               <div class="mb-3 col-12">
                 <button
                   type="submit"
