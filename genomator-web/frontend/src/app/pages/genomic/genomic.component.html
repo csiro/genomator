@@ -447,7 +447,7 @@
                       aria-valuemin="0"
                       aria-valuemax="100"
                       role="progressbar"
-                      [attr.aria-valuenow]="progress1 + '%'"
+                      [attr.aria-valuenow]="progress1"
                     ></div>
                   </div>
                 </div>
@@ -464,7 +464,7 @@
                       aria-valuemin="0"
                       aria-valuemax="100"
                       role="progressbar"
-                      [attr.aria-valuenow]="progress2 + '%'"
+                      [attr.aria-valuenow]="progress2"
                     ></div>
                   </div>
                 </div>
@@ -481,7 +481,7 @@
                       aria-valuemin="0"
                       aria-valuemax="100"
                       role="progressbar"
-                      [attr.aria-valuenow]="progress3 + '%'"
+                      [attr.aria-valuenow]="progress3"
                     ></div>
                   </div>
                 </div>
@@ -498,7 +498,7 @@
                       aria-valuemin="0"
                       aria-valuemax="100"
                       role="progressbar"
-                      [attr.aria-valuenow]="progress4 + '%'"
+                      [attr.aria-valuenow]="progress4"
                     ></div>
                   </div>
                 </div>
@@ -515,7 +515,7 @@
                       aria-valuemin="0"
                       aria-valuemax="100"
                       role="progressbar"
-                      [attr.aria-valuenow]="progress5 + '%'"
+                      [attr.aria-valuenow]="progress5"
                     ></div>
                   </div>
                 </div>
@@ -542,7 +542,7 @@
                 [attr.aria-live]="disableDownload ? 'polite' : 'assertive'"
                 aria-relevant="additions text"
                 [attr.aria-atomic]="disableDownload ? 'false' : 'true'"
-                [innerHTML]="logging_message"
+                [value]="logging_message"
               ></textarea>
             </div>
             <div

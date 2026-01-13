@@ -56,7 +56,7 @@
 
 
 .code-block  {
-  white-space: nowrap;
+  white-space: pre-wrap;
   font-family: monospace;
 }
 

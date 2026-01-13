@@ -1,5 +1,11 @@
 import { PyodideService } from 'src/app/services/pyodide/pyodide.service';
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  ElementRef,
+  NgZone,
+} from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -91,7 +97,8 @@ export class GenomicComponent implements OnInit {
 
   constructor(
     private pyodideService: PyodideService,
-    private http: HttpClient
+    private http: HttpClient,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit() {
@@ -133,13 +140,15 @@ export class GenomicComponent implements OnInit {
       .then(() => {
         console.log('pyodideService loaded successfully.');
         this.pyodideService.registerOutput((z: string) => {
-          let log_string = this.logging_message + z + '\n';
-          let start_index = Math.max(0, log_string.length - 1000);
-          log_string = log_string.substr(start_index);
-          if (start_index > 0) log_string = '. . .\n' + log_string;
-          this.logging_message = log_string;
-          this.scrollToBottom();
-          this.setProgressString(z);
+          this.ngZone.run(() => {
+            let log_string = this.logging_message + z + '\n';
+            let start_index = Math.max(0, log_string.length - 1000);
+            log_string = log_string.substr(start_index);
+            if (start_index > 0) log_string = '. . .\n' + log_string;
+            this.logging_message = log_string;
+            this.scrollToBottom();
+            this.setProgressString(z);
+          });
         });
         this.loading = false;
         this.disableSubmit = false;
@@ -471,6 +480,8 @@ export class GenomicComponent implements OnInit {
 
           this.disableSubmit = false;
           this.disableDownload = false;
+
+          console.log(this.logging_message);
         },
         (error) => {
           this.setProgress(0);
