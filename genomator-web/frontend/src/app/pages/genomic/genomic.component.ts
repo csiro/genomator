@@ -72,6 +72,7 @@ const mergeTwoSortedArrays = (arr1: any[], arr2: any[]) => {
   styleUrls: ['./genomic.component.css'],
 })
 export class GenomicComponent implements OnInit {
+  @ViewChild('log_textarea1') myTextArea!: ElementRef;
   protected form: any;
   protected logging_message: string = '';
   protected status: string = '';
@@ -90,7 +91,8 @@ export class GenomicComponent implements OnInit {
   protected spikeFileContent: Array<Array<string>> | null = null;
   protected ParamMode = ParamMode;
   protected mode: ParamMode = ParamMode.Advanced;
-  @ViewChild('log_textarea1') myTextArea!: ElementRef;
+  private startTime: number = 0;
+  private endTime: number = 0;
 
   faPython = faPython;
   faGithub = faGithub;
@@ -444,6 +446,7 @@ export class GenomicComponent implements OnInit {
     if (this.file === null) {
       return;
     }
+    this.startTime = Date.now();
     this.setProgress(0);
     this.disableSubmit = true;
     this.disableDownload = true;
@@ -480,8 +483,11 @@ export class GenomicComponent implements OnInit {
 
           this.disableSubmit = false;
           this.disableDownload = false;
-
-          console.log(this.logging_message);
+          this.endTime = Date.now();
+          const timeTaken = (this.endTime - this.startTime) / 1000;
+          this.logging_message += `\nTotal time taken: ${timeTaken.toFixed(
+            2
+          )} seconds\n`;
         },
         (error) => {
           this.setProgress(0);
