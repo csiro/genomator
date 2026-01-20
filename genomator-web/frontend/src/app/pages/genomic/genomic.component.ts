@@ -100,7 +100,7 @@ export class GenomicComponent implements OnInit {
   constructor(
     private pyodideService: PyodideService,
     private http: HttpClient,
-    private ngZone: NgZone
+    private ngZone: NgZone,
   ) {}
 
   ngOnInit() {
@@ -111,27 +111,27 @@ export class GenomicComponent implements OnInit {
           Validators.compose([
             Validators.required,
             Validators.pattern('[1-9][0-9]*'),
-          ])
+          ]),
         ),
         number_of_data: new FormControl(
           10,
           Validators.compose([
             Validators.required,
             Validators.pattern('[1-9][0-9]*'),
-          ])
+          ]),
         ),
         exception_space: new FormControl(
           0,
-          Validators.compose([Validators.required])
+          Validators.compose([Validators.required]),
         ),
         looseness: new FormControl(
           0,
-          Validators.compose([Validators.required])
+          Validators.compose([Validators.required]),
         ),
         filePicker: new FormControl(''),
         spikeFilePicker: new FormControl(''),
       },
-      []
+      [],
     );
     this.disableSubmit = true;
     this.loading = true;
@@ -239,10 +239,17 @@ export class GenomicComponent implements OnInit {
       const text = event.target.result;
       const lines = text.trim().split('\n');
       const rows: Array<Array<string>> = lines.map((line: string) =>
-        line.trim().split(',')
+        line.trim().split(','),
       );
+
+      if (rows.length === 0 || rows.length > 1000) {
+        alert('Spike file must contain between 1 and 1000 variants.');
+        event.target.value = '';
+        return;
+      }
+
       this.spikeFileContent = rows.sort(
-        (a, b) => parseInt(a[1], 10) - parseInt(b[1], 10)
+        (a, b) => parseInt(a[1], 10) - parseInt(b[1], 10),
       );
     };
     reader.readAsText(file);
@@ -348,7 +355,7 @@ export class GenomicComponent implements OnInit {
           acc[chrom].push(line);
           return acc;
         },
-        {}
+        {},
       );
 
       const spikesByChrom = this.spikeFileContent.reduce(
@@ -360,14 +367,14 @@ export class GenomicComponent implements OnInit {
           acc[spike[0]].sort((a: any, b: any) => a[1] - b[1]);
           return acc;
         },
-        {}
+        {},
       );
 
       for (const lines of Object.values(spikesByChrom)) {
         for (const line of lines as any[]) {
           if (line.length !== vcfDataRowLength) {
             alert(
-              `Spike file's line length ${line.length} does not match VCF data line length ${vcfDataRowLength}.`
+              `Spike file's line length ${line.length} does not match VCF data line length ${vcfDataRowLength}.`,
             );
             return;
           }
@@ -389,7 +396,7 @@ export class GenomicComponent implements OnInit {
 
         const mergedLines = mergeTwoSortedArrays(
           vcfLinesByChrom[chrom],
-          spikesByChrom[chrom]
+          spikesByChrom[chrom],
         );
 
         for (const line of mergedLines) {
@@ -405,7 +412,7 @@ export class GenomicComponent implements OnInit {
         [spikedVcf.map((line) => line.join('\t')).join('\n')],
         {
           type: 'text/plain',
-        }
+        },
       );
 
       // Create download link and simulate click
@@ -464,7 +471,7 @@ export class GenomicComponent implements OnInit {
     this.statusClass = 'alert alert-info';
     this.pyodideService.loadFile(
       new Uint8Array(await this.file.arrayBuffer()),
-      'vcf_input.vcf'
+      'vcf_input.vcf',
     );
     this.pyodideService
       .execute('Genomator_exec', [
@@ -486,7 +493,7 @@ export class GenomicComponent implements OnInit {
           this.endTime = Date.now();
           const timeTaken = (this.endTime - this.startTime) / 1000;
           this.logging_message += `\nTotal time taken: ${timeTaken.toFixed(
-            2
+            2,
           )} seconds\n`;
         },
         (error) => {
@@ -494,7 +501,7 @@ export class GenomicComponent implements OnInit {
           this.status = 'ERROR: ' + error;
           this.statusClass = 'alert alert-danger';
           this.disableSubmit = false;
-        }
+        },
       );
   }
 
