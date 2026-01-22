@@ -177,6 +177,23 @@
                 large VCF files may cause performance issues or browser crashes.
                 It is recommended to use smaller VCF (less than 100,000 variants
                 and 1000 samples).
+                <hr />
+                Genomator web only supports uncompressed VCF files at the moment
+                and should be carefully selected in accordance with your
+                computer's RAM capacity.
+                <hr />
+                Computational time is expected to increase with the size of file
+                and the parameter combination as explained in
+                <button
+                  (click)="scrollTo(howToUseSection)"
+                  class="btn btn-link p-0"
+                >
+                  How to use
+                </button>
+                section below. For example, a subset of X chromosome from 1000
+                Genomes VCF file with 50,000 variants and 2504 samples, takes
+                50, 20 and 70 minutes to generate 10 synthetic samples under
+                Balanced, High Accuracy, and High Privacy modes respectively.
               </div>
 
               <br />
@@ -605,7 +622,7 @@
     <div class="row">
       <div class="col-10 mx-auto">
         <div class="card-body">
-          <h1 class="card-title-HowTo">How to use</h1>
+          <h1 class="card-title-HowTo" #how_to_use>How to use</h1>
           The <i>'Genomic Data Generation'</i> page will load an interface
           hosting a lite version of Genomator software for use generating
           synthetic datasets from small genomic VCF datafiles.<br />

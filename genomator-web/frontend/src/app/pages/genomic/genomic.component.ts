@@ -73,6 +73,7 @@ const mergeTwoSortedArrays = (arr1: any[], arr2: any[]) => {
 })
 export class GenomicComponent implements OnInit {
   @ViewChild('log_textarea1') myTextArea!: ElementRef;
+  @ViewChild('how_to_use') howToUseSection!: ElementRef;
   protected form: any;
   protected logging_message: string = '';
   protected status: string = '';
@@ -164,6 +165,10 @@ export class GenomicComponent implements OnInit {
       this.myTextArea.nativeElement.scrollTop =
         this.myTextArea.nativeElement.scrollHeight;
     }
+  }
+
+  scrollTo(el: ElementRef<HTMLElement>) {
+    el.nativeElement.scrollIntoView({ behavior: 'smooth' });
   }
 
   setMode(mode: ParamMode) {
