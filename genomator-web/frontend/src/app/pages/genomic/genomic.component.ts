@@ -18,6 +18,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faPython } from '@fortawesome/free-brands-svg-icons';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
+import { ToastrService } from 'ngx-toastr';
 
 enum ParamMode {
   HighPrivacy = 'High Privacy',
@@ -102,6 +103,7 @@ export class GenomicComponent implements OnInit {
     private pyodideService: PyodideService,
     private http: HttpClient,
     private ngZone: NgZone,
+    private toastr: ToastrService,
   ) {}
 
   ngOnInit() {
@@ -214,12 +216,25 @@ export class GenomicComponent implements OnInit {
       return;
     }
     if (files.length > 1) {
-      alert('Cannot provide more than one file at a time.');
+      this.toastr.error(
+        'Cannot provide more than one file at a time.',
+        'Multiple Files Selected',
+      );
+      (e.target as HTMLInputElement).value = '';
       return;
     }
     const file: File = files.item(0)!;
+
+    if (file.size > 1 * 1024 * 1024 * 1024) {
+      this.toastr.error('File size exceeds 1GB limit.', 'File Too Large');
+      return;
+    }
     if (!file.name.toLowerCase().endsWith('.vcf')) {
-      alert('File extension did not match .vcf');
+      this.toastr.error(
+        'File extension did not match .vcf',
+        'Invalid File Extension',
+      );
+      (e.target as HTMLInputElement).value = '';
       return;
     }
     this.file = file;
@@ -231,12 +246,18 @@ export class GenomicComponent implements OnInit {
       return;
     }
     if (files.length > 1) {
-      alert('Cannot provide more than one file at a time.');
+      this.toastr.error(
+        'Cannot provide more than one file at a time.',
+        'Multiple Files Selected',
+      );
       return;
     }
     const file: File = files.item(0)!;
     if (!file.name.toLowerCase().endsWith('.csv')) {
-      alert('File extension did not match .csv');
+      this.toastr.error(
+        'File extension did not match .csv',
+        'Invalid File Extension',
+      );
       return;
     }
     const reader = new FileReader();
@@ -248,7 +269,10 @@ export class GenomicComponent implements OnInit {
       );
 
       if (rows.length === 0 || rows.length > 1000) {
-        alert('Spike file must contain between 1 and 1000 variants.');
+        this.toastr.error(
+          'Spike file must contain between 1 and 1000 variants.',
+          'Invalid Spike File',
+        );
         event.target.value = '';
         return;
       }
@@ -345,7 +369,7 @@ export class GenomicComponent implements OnInit {
       // ].map((line) => line.split('\t'));
 
       if (!this.spikeFileContent) {
-        alert('No spike file loaded.');
+        this.toastr.error('No spike file loaded.', 'Missing Spike File');
         return;
       }
       const vcfHeader = vcfLines.filter((line) => line[0].startsWith('#'));
@@ -378,8 +402,9 @@ export class GenomicComponent implements OnInit {
       for (const lines of Object.values(spikesByChrom)) {
         for (const line of lines as any[]) {
           if (line.length !== vcfDataRowLength) {
-            alert(
+            this.toastr.error(
               `Spike file's line length ${line.length} does not match VCF data line length ${vcfDataRowLength}.`,
+              'Invalid Spike File',
             );
             return;
           }
@@ -503,9 +528,17 @@ export class GenomicComponent implements OnInit {
         },
         (error) => {
           this.setProgress(0);
-          this.status = 'ERROR: ' + error;
+          if (error.message.includes('AssertionError:')) {
+            this.status = 'ERROR: ' + error.message.split('AssertionError:')[1];
+            this.toastr.error(this.status, 'Processing Error');
+          } else {
+            this.status = 'ERROR: ' + error;
+          }
           this.statusClass = 'alert alert-danger';
           this.disableSubmit = false;
+
+          console.log('msg', error.message);
+          console.log('name', error.name);
         },
       );
   }

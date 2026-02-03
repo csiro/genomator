@@ -8,9 +8,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NavBarComponent } from './nav-bar/nav-bar.component'; // Import the NavBarComponent
 import { FooterComponent } from './footer/footer.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome'; // Import the FooterComponent
-
-
-
+import { ToastrModule } from 'ngx-toastr';
 
 @NgModule({
   declarations: [
@@ -24,12 +22,9 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome'; // Import 
     MatTabsModule,
     BrowserAnimationsModule,
     FontAwesomeModule,
-    
-    // NgParticlesModule, // Include NgParticlesModule here
-
+    ToastrModule.forRoot(),
   ],
-  providers: [
-  ],
-  bootstrap: [AppComponent]
+  providers: [],
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

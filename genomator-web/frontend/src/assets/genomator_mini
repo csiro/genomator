@@ -38,6 +38,7 @@ async def async_print(*args):
 async def parse_VCF_to_genome_strings(input_vcf_file):
     with open(input_vcf_file,'r') as f:
         num_records = sum([l[0]!='#' for l in f.readlines()])
+        assert num_records <= 100_000, "VCF file contains more than 100,000 variants, please reduce the size for processing."
     genome_partials = []
     genomes = []
     reader = vcfpy.Reader.from_path(input_vcf_file)
@@ -57,6 +58,7 @@ async def parse_VCF_to_genome_strings(input_vcf_file):
                 genomes.append([])
                 genome_partials.append([])
             for f in fragment:
+                assert  f is not None, "cannot currently work with missing data"
                 genome_partials[i] += [f.to_bytes(1,"big")]
         if j&31==0:
             await async_print(f"loaded variants {j}/{num_records}")
