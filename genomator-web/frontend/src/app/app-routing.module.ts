@@ -15,7 +15,14 @@ const routes: Routes = [
     path: 'genomic',
     loadComponent: () =>
       import('./pages/genomic/genomic.component').then(
-        (m) => m.GenomicComponent
+        (m) => m.GenomicComponent,
+      ),
+  },
+  {
+    path: 'calculate',
+    loadComponent: () =>
+      import('./pages/calculate-privacy-metric/calculate-privacy-metric.component').then(
+        (m) => m.CalculatePrivacyMetricComponent,
       ),
   },
 ];

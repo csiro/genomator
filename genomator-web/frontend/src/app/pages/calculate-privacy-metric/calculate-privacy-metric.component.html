@@ -1,0 +1,57 @@
+<div class="my-container">
+  <div class="card mx-auto shadow my-4">
+    <div class="row">
+      <div class="col-10 mx-auto">
+        <div class="card-body">
+          <h1 class="card-title-DataSubmission">Evaluate Privacy Metric</h1>
+
+          To evaluate the privacy metric of the generated data, you need the
+          following information:
+
+          <ul class="bullet-list list-unstyled pl-0">
+            <li>
+              <b>Input VCF file</b> - The original VCF file containing your
+              genomic data.
+            </li>
+            <li>
+              <b>Generated VCF file</b> - The synthetic VCF file generated from
+              the original data.
+            </li>
+            <li>
+              <b>Number of trials (Optional) </b> - The number of times the
+              evaluation is repeated to ensure accuracy.
+            </li>
+            <li>
+              <b>Degree of privacy metric (Optional) </b> - The level of privacy
+              achieved by the synthetic data.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mx-auto shadow mb-4">
+    <div class="row">
+      <div class="col-10 mx-auto">
+        <div class="card-body">
+          <h1 class="card-title-DataSubmission">Offline Evaluation</h1>
+
+          <p>Install the following dependencies:</p>
+          <pre aria-label="Shell command to install required dependencies">
+          <code [highlight]="deps" language="shell"></code>
+        </pre>
+
+          <p>
+            Please run the following script in your computer using the
+            attributes mentioned above:
+          </p>
+
+          <pre aria-label="Python script to evaluate the privacy metric">
+          <code [highlight]="code" language="python"></code>
+        </pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

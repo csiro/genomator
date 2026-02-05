@@ -48,6 +48,20 @@
       <li>
         <a
           class="nav-link"
+          [routerLink]="['/calculate']"
+          [routerLinkActive]="['active']"
+          #calPr="routerLinkActive"
+          [attr.aria-current]="calPr.isActive ? 'page' : null"
+          aria-label="Calculate privacy metric"
+          data-bs-toggle="tooltip"
+          data-bs-title="Calculate Privacy Metric"
+          data-bs-placement="bottom"
+          >Calculate</a
+        >
+      </li>
+      <li>
+        <a
+          class="nav-link"
           href="https://bioinformatics.csiro.au/get-in-touch/"
           target="_blank"
           aria-label="Get Help (opens in new tab)"
@@ -129,6 +143,21 @@
             data-bs-title="Generate Genomic Data"
             data-bs-placement="right"
             >Generate</a
+          >
+        </li>
+        <li>
+          <a
+            data-bs-dismiss="offcanvas"
+            class="nav-link"
+            [routerLink]="['/calculate']"
+            [routerLinkActive]="['active']"
+            #calOffRla="routerLinkActive"
+            [attr.aria-current]="calOffRla.isActive ? 'page' : null"
+            aria-label="Calculate privacy metric"
+            data-bs-toggle="tooltip"
+            data-bs-title="Calculate Privacy Metric"
+            data-bs-placement="right"
+            >Calculate</a
           >
         </li>
         <li>

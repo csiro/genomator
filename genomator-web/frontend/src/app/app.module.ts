@@ -9,13 +9,10 @@ import { NavBarComponent } from './nav-bar/nav-bar.component'; // Import the Nav
 import { FooterComponent } from './footer/footer.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome'; // Import the FooterComponent
 import { ToastrModule } from 'ngx-toastr';
+import { HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    NavBarComponent, // Declare the NavBarComponent here
-    FooterComponent,
-  ],
+  declarations: [AppComponent, NavBarComponent, FooterComponent],
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -24,7 +21,17 @@ import { ToastrModule } from 'ngx-toastr';
     FontAwesomeModule,
     ToastrModule.forRoot(),
   ],
-  providers: [],
+  providers: [
+    {
+      provide: HIGHLIGHT_OPTIONS,
+      useValue: {
+        coreLibraryLoader: () => import('highlight.js/lib/core'),
+        languages: {
+          python: () => import('highlight.js/lib/languages/python'),
+        },
+      },
+    },
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
