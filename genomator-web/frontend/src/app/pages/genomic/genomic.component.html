@@ -269,7 +269,7 @@
                 <label
                   id="cluster_group_size_label"
                   for="cluster_group_size"
-                  class="col-sm-3 col-form-label"
+                  class="col-sm-4 col-form-label"
                   ><strong>Choose a Cluster Group Size</strong> (ie. N)</label
                 >
                 <div class="col-sm-8">
@@ -315,11 +315,11 @@
                 <label
                   id="looseness_label"
                   for="looseness"
-                  class="col-sm-3 col-form-label"
+                  class="col-sm-4 col-form-label"
                   ><strong
                     >How much looseness should the process involve?</strong
                   >
-                  (ie. L)</label
+                  (ie. L, L = {{ form.getRawValue().looseness }})</label
                 >
                 <div class="col-sm-8">
                   <input
@@ -352,11 +352,9 @@
                 <label
                   id="exception_space_label"
                   for="exception_space"
-                  class="col-sm-3 col-form-label"
-                  ><strong
-                    >How how much should rare pairs be attenuated?</strong
-                  >
-                  (ie. Z)</label
+                  class="col-sm-4 col-form-label"
+                  ><strong>How much should rare pairs be attenuated?</strong>
+                  (ie. Z, Z = {{ form.getRawValue().exception_space }})</label
                 >
                 <div class="col-sm-8">
                   <input
@@ -389,7 +387,7 @@
                 <label
                   id="number_of_data_label"
                   for="number_of_data"
-                  class="col-sm-3 col-form-label"
+                  class="col-sm-4 col-form-label"
                   ><strong>How many Synthetic Data Points?</strong></label
                 >
                 <div class="col-sm-8">

@@ -110,7 +110,7 @@ export class GenomicComponent implements OnInit {
     this.form = new FormGroup(
       {
         cluster_group_size: new FormControl(
-          10,
+          5,
           Validators.compose([
             Validators.required,
             Validators.pattern('[1-9][0-9]*'),
@@ -179,7 +179,6 @@ export class GenomicComponent implements OnInit {
       case ParamMode.HighAccuracy:
         this.form.disable();
         this.form.patchValue({
-          cluster_group_size: 5,
           exception_space: 0,
           looseness: 0,
         });
@@ -187,7 +186,6 @@ export class GenomicComponent implements OnInit {
       case ParamMode.Balanced:
         this.form.disable();
         this.form.patchValue({
-          cluster_group_size: 75,
           exception_space: 0.5,
           looseness: 0.5,
         });
@@ -195,7 +193,6 @@ export class GenomicComponent implements OnInit {
       case ParamMode.HighPrivacy:
         this.form.disable();
         this.form.patchValue({
-          cluster_group_size: 150,
           exception_space: 1,
           looseness: 1,
         });
@@ -204,6 +201,7 @@ export class GenomicComponent implements OnInit {
         this.form.enable();
         break;
     }
+    this.form.get('cluster_group_size').enable();
     this.form.get('number_of_data').enable();
     this.form.get('filePicker').enable();
     this.form.get('spikeFilePicker').enable();
@@ -488,6 +486,8 @@ export class GenomicComponent implements OnInit {
     this.disableSubmit = true;
     this.disableDownload = true;
     const formValue = this.form.getRawValue();
+
+    console.log('Form Value:', formValue);
     let cluster_group_size = formValue.cluster_group_size;
     let number_of_data = formValue.number_of_data;
     let exception_space = formValue.exception_space;
