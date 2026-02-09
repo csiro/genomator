@@ -69,6 +69,8 @@ resource "aws_cloudfront_distribution" "app_distribution" {
 
   viewer_certificate {
     cloudfront_default_certificate = true
+    ssl_support_method             = "sni-only"
+    minimum_protocol_version       = "TLSv1.2_2021"
   }
 }
 
@@ -100,6 +102,20 @@ resource "aws_cloudfront_response_headers_policy" "headers_policy" {
     referrer_policy {
       override        = true
       referrer_policy = "no-referrer"
+    }
+  }
+
+  custom_headers_config {
+    items {
+      header   = "Cache-Control"
+      value    = "public, max-age=3600, immutable"
+      override = true
+    }
+  }
+
+  remove_headers_config {
+    items {
+      header = "Server"
     }
   }
 }
