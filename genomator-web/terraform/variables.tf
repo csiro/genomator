@@ -38,7 +38,7 @@ variable "install-command" {
 variable "build-command" {
   type        = string
   description = "Build command to build the webapp"
-  default     = "./node_modules/.bin/ng build --configuration production --subresource-integrity"
+  default     = "./node_modules/.bin/ng build --configuration production"
 }
 
 variable "build-destination" {

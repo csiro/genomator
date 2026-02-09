@@ -35,10 +35,14 @@ async def async_print(*args):
 
 # parse_VCF_to_genome_strings(): parse a VCF file into an array of sample data, where
 # phased and unphased data get flattened into sequences of bytes objects
-async def parse_VCF_to_genome_strings(input_vcf_file):
+async def parse_VCF_to_genome_strings(input_vcf_file, number_of_genomes):
     with open(input_vcf_file,'r') as f:
-        num_records = sum([l[0]!='#' for l in f.readlines()])
+        lines = [l for l in f.readlines() if l[0]!='#']
+        num_samples = len(lines[0].strip().split('\t')) - 9
+        num_records = len(lines)
         assert num_records <= 100_000, "VCF file contains more than 100,000 variants, please reduce the size for processing."
+        assert num_records * num_samples <= 10**8, "VCF file contains more than 100 million data points, please reduce the size for processing. WASM address space is limited and this is to prevent memory overflow."
+        assert num_samples >= number_of_genomes, "VCF file contains fewer samples than the number of genomes requested, please reduce the number of genomes or provide a VCF file with more samples."
     genome_partials = []
     genomes = []
     reader = vcfpy.Reader.from_path(input_vcf_file)
@@ -233,7 +237,7 @@ async def generate_genomes(reference_genomes, sample_group_size, number_of_genom
 # and <exception_space> and <looseness> parameters informing the process
 async def Genomator_exec(input_vcf_file, output_vcf_file, number_of_genomes, exception_space=0, sample_group_size=10, looseness=0):
     await async_print('Beginning Genomator Genomic generation')
-    genomes, ploidy = await parse_VCF_to_genome_strings(input_vcf_file)
+    genomes, ploidy = await parse_VCF_to_genome_strings(input_vcf_file, number_of_genomes)
     s = await generate_genomes(genomes, sample_group_size, number_of_genomes, exception_space, looseness)
     await parse_genome_strings_to_VCF(s, input_vcf_file, output_vcf_file, ploidy)
 

@@ -30,6 +30,16 @@
           },
           "configurations": {
             "production": {
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": {
+                  "inline": false
+                }
+              },
               "budgets": [
                 {
                   "type": "initial",
@@ -43,7 +53,7 @@
                 }
               ],
               "outputHashing": "all",
-              "subresourceIntegrity": true
+              "subresourceIntegrity": false
             },
             "development": {
               "buildOptimizer": false,
