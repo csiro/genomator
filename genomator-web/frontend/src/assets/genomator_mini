@@ -42,7 +42,7 @@ async def parse_VCF_to_genome_strings(input_vcf_file, number_of_genomes):
         num_records = len(lines)
         assert num_records <= 100_000, "VCF file contains more than 100,000 variants, please reduce the size for processing."
         assert num_records * num_samples <= 10**8, "VCF file contains more than 100 million data points, please reduce the size for processing. WASM address space is limited and this is to prevent memory overflow."
-        assert num_samples >= number_of_genomes, "VCF file contains fewer samples than the number of genomes requested, please reduce the number of genomes or provide a VCF file with more samples."
+        assert num_records * number_of_genomes <= 10**8, "Output VCF file contains more than 100 million data points, please reduce the size for processing. WASM address space is limited and this is to prevent memory overflow."
     genome_partials = []
     genomes = []
     reader = vcfpy.Reader.from_path(input_vcf_file)

@@ -194,7 +194,7 @@ export class GenomicComponent implements OnInit {
         this.form.disable();
         this.form.patchValue({
           exception_space: 1,
-          looseness: 1,
+          looseness: 0.99,
         });
         break;
       case ParamMode.Advanced:
