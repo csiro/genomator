@@ -67,10 +67,12 @@ resource "aws_cloudfront_distribution" "app_distribution" {
     }
   }
 
+  aliases = ["genomator.csiro.au"]
+
   viewer_certificate {
-    cloudfront_default_certificate = true
-    ssl_support_method             = "sni-only"
-    minimum_protocol_version       = "TLSv1.2_2021"
+    acm_certificate_arn      = module.acm.acm_certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 }
 
