@@ -37,9 +37,16 @@ async def async_print(*args):
 # phased and unphased data get flattened into sequences of bytes objects
 async def parse_VCF_to_genome_strings(input_vcf_file, number_of_genomes):
     with open(input_vcf_file,'r') as f:
-        lines = [l for l in f.readlines() if l[0]!='#']
-        num_samples = len(lines[0].strip().split('\t')) - 9
-        num_records = len(lines)
+        lines = [l for l in f.readlines()]
+        header = [l for l in lines if l[0]=='#']
+        version = [l for l in header if l.startswith("##fileformat=")]
+
+        assert len(version) == 1, "VCF file is missing version information, please ensure the file starts with a line like '##fileformat=VCFv4.2'"
+        assert version[0].strip() in ["##fileformat=VCFv4.2","##fileformat=VCFv4.3"], "VCF file version not recognised, please ensure the file starts with a line like '##fileformat=VCFv4.2' or '##fileformat=VCFv4.3'"
+
+        rows = [l for l in lines if l[0]!='#']
+        num_samples = len(rows[0].strip().split('\t')) - 9
+        num_records = len(rows)
         assert num_records <= 100_000, "VCF file contains more than 100,000 variants, please reduce the size for processing."
         assert num_records * num_samples <= 10**8, "VCF file contains more than 100 million data points, please reduce the size for processing. WASM address space is limited and this is to prevent memory overflow."
         assert num_records * number_of_genomes <= 10**8, "Output VCF file contains more than 100 million data points, please reduce the size for processing. WASM address space is limited and this is to prevent memory overflow."
