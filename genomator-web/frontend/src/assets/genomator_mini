@@ -5,12 +5,18 @@ from collections import defaultdict
 from operator import itemgetter
 from copy import deepcopy as copy
 from itertools import islice
+from math import comb
+import time
+
 from pysat.solvers import Solver
 import vcfpy
 import click
 import numpy as np
-import time
 
+MAX_TUNING_SAMPLE_SIZE = 200
+TARGET_SUCCESS_RATE = 0.05
+LOOSENESS_DP = 2
+LOOSENESS_SHORT_CIRCUIT_PVALUE = 0.05
 silent = False
 
 async def progress(itera, start_message, label, skip=0):
@@ -170,14 +176,27 @@ wrap_values = lambda x,N: (x+N)%(2*N+1)-N
 # The process repeatedly chooses a cluster randomly, and the SAT solver to ensures that any pair of properties (optionally but for some fraction <looseness>) that the cluster posesses (at a rate determined by <exception_space>) must also be true of the synthetic data point generated
 # <looseness> is a simple probability filter on what pairs of properties are constraining on the synthetic data output
 # <exception_space> is by default zero, where it only eliminates pairs of qualities not present in the source data from appearing in the output, or it can be positive (1,2,3) where it eliminates pairs of properties appearing a number of times or less in the input from appearing in the output; or it can be negative (-1,-1.5,-4 etc) for softer effect (attenuating properties that appear less than a random number less than its positive value)
-async def generate_genomes(reference_genomes, sample_group_size, number_of_genomes, exception_space, looseness):
+async def generate_genomes(reference_genomes, sample_group_size, number_of_genomes, exception_space, looseness=None):
     genome_solutions = []
     cluster_info = await cluster_setup_binary(reference_genomes, sample_group_size)
+    if looseness is None:
+        automatic_looseness = True
+        tuning = True
+        looseness = 0
+        await async_print(f"Trying L={looseness}")
+    else:
+        automatic_looseness = False
+        tuning = False
 
     # repeat till we generate <number_of_genomes> synthetic data points
     await async_print("Beginning Synthetic Data generation main loop.")
+    successes = 0
+    low_looseness = (0,  0)
+    high_looseness = (1, 1)
+    attempts = 0
     while len(genome_solutions) < number_of_genomes:
-        await async_print(f"Completed {len(genome_solutions)}/{number_of_genomes}")
+        if not tuning:
+            await async_print(f"Completed {len(genome_solutions)}/{number_of_genomes}")
         # select a cluster and shuffle
         genomes = [reference_genomes[ii] for ii in choice(cluster_info)]
         shuffle(genomes)
@@ -224,8 +243,35 @@ async def generate_genomes(reference_genomes, sample_group_size, number_of_genom
         # randomise the SAT solver, solve the SAT problem and extract the solution, deleting the SAT solver instance
         initial_t = time.time()
         solver.set_phases([(i+1) * (2*randint(0,1)-1) for i in range(variables)])
-        if solver.solve() != True:
-            await async_print('SAT problem insoluble, if this repeats please loosen parameters to make problem tractable.')
+        solved = solver.solve()
+        if tuning:
+            attempts += 1
+            successes += 1 if solved else 0
+            chance_given_target = (TARGET_SUCCESS_RATE**successes)*((1-TARGET_SUCCESS_RATE)**(attempts-successes))*comb(attempts,successes)
+            if chance_given_target <= LOOSENESS_SHORT_CIRCUIT_PVALUE or attempts >= MAX_TUNING_SAMPLE_SIZE:
+                success_rate = round(successes/attempts, LOOSENESS_DP+1)
+                if success_rate > TARGET_SUCCESS_RATE:
+                    await async_print(f'L={looseness} is too high, found success rate {success_rate} ({successes}/{attempts})')
+                    high_looseness = (looseness, success_rate)
+                elif success_rate < TARGET_SUCCESS_RATE:
+                    await async_print(f'L={looseness} is too low, found success rate {success_rate} ({successes}/{attempts})')
+                    low_looseness = (looseness, success_rate)
+                else:
+                    await async_print(f'L={looseness} is good, found success rate {success_rate} ({successes}/{attempts})')
+                    tuning = False
+                attempts = 0
+                successes = 0
+                if round(high_looseness[0] - low_looseness[0], LOOSENESS_DP) <= 10**(-LOOSENESS_DP):
+                    looseness = low_looseness[0] if low_looseness[1] and (TARGET_SUCCESS_RATE - low_looseness[1] <= high_looseness[1] - TARGET_SUCCESS_RATE) else high_looseness[0] 
+                    tuning = False
+                if tuning:
+                    looseness = round((low_looseness[0] + high_looseness[0])/2, LOOSENESS_DP)
+                    await async_print(f"Trying L={looseness}")
+                else:
+                    await async_print(f"Finished tuning, setting L={looseness}")
+            continue
+        if not solved:
+            await async_print('SAT problem insoluble, if this repeats too many times without making progress please loosen parameters to make problem tractable.')
             continue
         solution = solver.get_model()
         solver.delete()
@@ -237,24 +283,25 @@ async def generate_genomes(reference_genomes, sample_group_size, number_of_genom
         await async_print(f'processed output in {time.time()-initial_t}')
     await async_print(f"Completed {len(genome_solutions)}/{number_of_genomes}")
     await async_print('finished Synthetic Data generation loop')
-    return genome_solutions
+    return genome_solutions, looseness
 
 # Genomator_exec(): from an <input_vcf_file> generate <number_of_genomes> synthetic data and export to <output_vcf_file>
 # the process involving clustering the <input_vcf_file> data into clusters of size <sample_group_size>
 # and <exception_space> and <looseness> parameters informing the process
-async def Genomator_exec(input_vcf_file, output_vcf_file, number_of_genomes, exception_space=0, sample_group_size=10, looseness=0):
+async def Genomator_exec(input_vcf_file, output_vcf_file, number_of_genomes, exception_space=0, sample_group_size=10, looseness=None):
     await async_print('Beginning Genomator Genomic generation')
     genomes, ploidy = await parse_VCF_to_genome_strings(input_vcf_file, number_of_genomes)
-    s = await generate_genomes(genomes, sample_group_size, number_of_genomes, exception_space, looseness)
+    s, looseness = await generate_genomes(genomes, sample_group_size, number_of_genomes, exception_space, looseness)
     await parse_genome_strings_to_VCF(s, input_vcf_file, output_vcf_file, ploidy)
+    print(f"Finished Genomator Genomic generation with N={sample_group_size}, L={looseness}, Z={exception_space}")
 
 @click.command()
 @click.argument('input_vcf_file', type=click.types.Path())
 @click.argument('output_vcf_file', type=click.types.Path())
 @click.argument('number_of_genomes', type=click.INT, default=1)
-@click.option('--exception_space', type=click.INT, default=0)
+@click.option('--exception_space', type=click.FLOAT, default=0)
 @click.option('--sample_group_size', type=click.INT, default=10)
-@click.option('--looseness', type=click.FLOAT, default=0)
+@click.option('--looseness', type=click.FLOAT, default=None)
 def Genomator_mini(input_vcf_file, output_vcf_file, number_of_genomes, exception_space, sample_group_size, looseness):
     run(Genomator_exec(input_vcf_file, output_vcf_file, number_of_genomes, exception_space, sample_group_size, looseness))
 
