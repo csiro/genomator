@@ -198,6 +198,9 @@
                 <hr />
                 Please note that the VCF file should contain uniform ploidy. For
                 example, you cannot mix autosomal and sex chromosomes.
+                <hr />
+                Please note that Genomator web cannot currently handle missing
+                variants.
               </div>
 
               <br />
@@ -314,6 +317,7 @@
                 class="mb-3 row"
                 role="group"
                 aria-labelledby="looseness_label"
+                [hidden]="form.getRawValue().auto_looseness"
               >
                 <label
                   id="looseness_label"
@@ -322,7 +326,12 @@
                   ><strong
                     >How much looseness should the process involve?</strong
                   >
-                  (ie. L, L = {{ form.getRawValue().looseness }})</label
+                  (ie. L, L =
+                  {{
+                    form.getRawValue().auto_looseness
+                      ? "auto"
+                      : form.getRawValue().looseness
+                  }})</label
                 >
                 <div class="col-sm-8">
                   <input
@@ -344,6 +353,28 @@
                   <span id="looseness_value" aria-live="polite">{{
                     this.form.value.looseness
                   }}</span>
+                </div>
+              </div>
+
+              <div
+                class="mb-3 row"
+                role="group"
+                aria-labelledby="auto_looseness_label"
+              >
+                <label
+                  id="auto_looseness_label"
+                  for="auto_looseness"
+                  class="col-sm-4 col-form-label"
+                  ><strong>Detect looseness automatically?</strong>
+                </label>
+                <div class="col-sm-8">
+                  <input
+                    id="auto_looseness"
+                    type="checkbox"
+                    formControlName="auto_looseness"
+                    class="form-check-input"
+                    aria-describedby="auto_looseness_value"
+                  />
                 </div>
               </div>
 

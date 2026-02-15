@@ -131,6 +131,7 @@ export class GenomicComponent implements OnInit {
           0,
           Validators.compose([Validators.required]),
         ),
+        auto_looseness: new FormControl(false),
         filePicker: new FormControl(''),
         spikeFilePicker: new FormControl(''),
       },
@@ -181,6 +182,7 @@ export class GenomicComponent implements OnInit {
         this.form.patchValue({
           exception_space: 0,
           looseness: 0,
+          auto_looseness: true,
         });
         break;
       case ParamMode.Balanced:
@@ -188,6 +190,7 @@ export class GenomicComponent implements OnInit {
         this.form.patchValue({
           exception_space: 0.5,
           looseness: 0.5,
+          auto_looseness: true,
         });
         break;
       case ParamMode.HighPrivacy:
@@ -195,10 +198,14 @@ export class GenomicComponent implements OnInit {
         this.form.patchValue({
           exception_space: 1,
           looseness: 0.99,
+          auto_looseness: true,
         });
         break;
       case ParamMode.Advanced:
         this.form.enable();
+        this.form.patchValue({
+          auto_looseness: false,
+        });
         break;
     }
     this.form.get('cluster_group_size').enable();
@@ -492,6 +499,7 @@ export class GenomicComponent implements OnInit {
     let number_of_data = formValue.number_of_data;
     let exception_space = formValue.exception_space;
     let looseness = formValue.looseness;
+    let auto_looseness = formValue.auto_looseness;
     this.form.markAllAsTouched();
     this.form.markAsDirty();
     if (this.form.invalid) return;
@@ -510,7 +518,7 @@ export class GenomicComponent implements OnInit {
         number_of_data,
         -exception_space,
         cluster_group_size,
-        looseness,
+        auto_looseness ? null : looseness,
       ])
       .then(
         () => {
