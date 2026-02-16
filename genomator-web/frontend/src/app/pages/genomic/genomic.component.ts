@@ -180,6 +180,7 @@ export class GenomicComponent implements OnInit {
       case ParamMode.HighAccuracy:
         this.form.disable();
         this.form.patchValue({
+          cluster_group_size: 5,
           exception_space: 0,
           looseness: 0,
           auto_looseness: true,
@@ -188,6 +189,7 @@ export class GenomicComponent implements OnInit {
       case ParamMode.Balanced:
         this.form.disable();
         this.form.patchValue({
+          cluster_group_size: 5,
           exception_space: 0.5,
           looseness: 0.5,
           auto_looseness: true,
@@ -196,6 +198,7 @@ export class GenomicComponent implements OnInit {
       case ParamMode.HighPrivacy:
         this.form.disable();
         this.form.patchValue({
+          cluster_group_size: 10,
           exception_space: 1,
           looseness: 0.99,
           auto_looseness: true,
