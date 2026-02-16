@@ -234,7 +234,7 @@ async def generate_genomes(reference_genomes, sample_group_size, number_of_genom
         initial_t = time.time()
         for i,k1 in enumerate(binary_queries):
             for j in range(i,len(binary_queries)):
-                e_space = exception_space if (exception_space >= 0) else int(random()*(abs(exception_space)+1))
+                e_space = int(random()*(exception_space+1)) if (exception_space >= 0) else abs(exception_space)
                 if (((k1|binary_queries[j])^mask).bit_count() <= e_space) and (random()>=looseness):
                     solver.add_clause([ -query_index_to_variable[i],-query_index_to_variable[j] ])
         for c in clauses: solver.add_clause([index[cc] for cc in c])

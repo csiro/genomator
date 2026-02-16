@@ -519,7 +519,7 @@ export class GenomicComponent implements OnInit {
         'vcf_input.vcf',
         'vcf_output.vcf',
         number_of_data,
-        -exception_space,
+        exception_space,
         cluster_group_size,
         auto_looseness ? null : looseness,
       ])
