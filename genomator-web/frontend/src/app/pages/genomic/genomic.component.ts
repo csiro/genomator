@@ -559,12 +559,14 @@ export class GenomicComponent implements OnInit {
       this.disableSubmit = true;
       this.disableDownload = true;
       this.http
-        .get('assets/805_SNP_1000G_real.vcf', { responseType: 'arraybuffer' })
+        .get('assets/10samples-10kvariants.vcf', {
+          responseType: 'arraybuffer',
+        })
         .subscribe((data: ArrayBuffer) => {
-          this.file = new File([data], '805_SNP_1000G_real.vcf');
+          this.file = new File([data], '10samples-10kvariants.vcf');
           this.form.patchValue({
-            cluster_group_size: 10,
-            number_of_data: 1000,
+            cluster_group_size: 5,
+            number_of_data: 10,
             exception_space: 0,
             looseness: 0,
           });
