@@ -2,6 +2,7 @@
 from collections import Counter
 from functools import reduce
 import itertools
+import math
 import sys
 
 import click
@@ -101,6 +102,19 @@ def count_absent_from_a_in_b(a, set_b):
     return absent, len(set_b - set_a)
 
 
+def format_with_uncertainty(val, uncertainty):
+    if uncertainty == 0:
+        return str(val)
+    else:
+        decimal_places = math.ceil(-math.log10(uncertainty))
+        first_digit = int(uncertainty * (10**decimal_places))
+        if first_digit == 1:
+            decimal_places += 1
+        rounded_uncertainty = round(uncertainty, decimal_places)
+        format_decimal_places = max(decimal_places, 0)
+        return f"{round(val, decimal_places):.{format_decimal_places}f}±{rounded_uncertainty:.{format_decimal_places}f}"
+
+
 def score_privacy(
     input_vcf_file, generated_vcf_file, trials=TRIALS_DEFAULT, degree=DEGREE_DEFAULT
 ) -> float:
@@ -109,7 +123,18 @@ def score_privacy(
     unique_reproduction_rate, absent_represented_rate = get_unique_reproduction_rate(
         input_records, generated_records, degree, trials
     )
-    return 1 - (unique_reproduction_rate - absent_represented_rate)
+    unique_reproduction_rate_variance = (
+        unique_reproduction_rate * (1 - unique_reproduction_rate) / (trials + 1)
+    )
+    absent_represented_rate_variance = (
+        absent_represented_rate * (1 - absent_represented_rate) / (trials + 1)
+    )
+    advantage = unique_reproduction_rate - absent_represented_rate
+    advantage_std_dev = (
+        unique_reproduction_rate_variance + absent_represented_rate_variance
+    ) ** 0.5
+
+    return format_with_uncertainty(1 - advantage, advantage_std_dev)
 
 
 @click.command()
