@@ -8,7 +8,7 @@ import cyvcf2
 import numpy as np
 from tqdm import tqdm
 
-TRIALS_DEFAULT = 10000
+TRIALS_DEFAULT = 100000
 DEGREE_DEFAULT = 4
 
 
