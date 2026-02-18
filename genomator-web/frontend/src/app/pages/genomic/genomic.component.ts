@@ -489,6 +489,10 @@ export class GenomicComponent implements OnInit {
       return;
     }
     if (this.file === null) {
+      this.toastr.error(
+        'Please select a VCF file to process.',
+        'No File Selected',
+      );
       return;
     }
     this.startTime = Date.now();
