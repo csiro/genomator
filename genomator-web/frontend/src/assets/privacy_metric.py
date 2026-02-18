@@ -55,18 +55,13 @@ def parse_vcf_to_record_strings(vcf_file):
     except StopIteration:
         log("VCF file contains no records")
         return []
-    try:
-        ploidy = len(first_line.genotypes[0]) - 1
-    except (IndexError, TypeError):
+    if not first_line.genotypes:
         log("VCF records do not contain genotypes")
         return []
     records = [
-        bytes(
-            haplotype
-            for genotype in record.genotypes
-            for haplotype in genotype[:ploidy]
-        )
+        bytes(genotype[haplotype] for genotype in record.genotypes)
         for record in tqdm(itertools.chain([first_line], reader))
+        for haplotype in range(len(record.genotypes[0]) - 1)
     ]
     return records
 
