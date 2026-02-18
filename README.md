@@ -25,11 +25,12 @@ A cardinality SAT solver and python wrapper built, which is compatible with Geno
 AngularJS project for a website (with Terraform AWS deploy configuration) for a website version of Genomator
 
 ## Licensing
-- The main codebase (in `/genomator`) is licensed under the CSIRO Non-Commercial License (based on BSD 3-Clause Clear).
-- The optional module in `/tinicard` is based on a GPLv2+ codebase and is therefore licensed under the GNU GPLv2+.
-- The optional module is not required for basic functionality.
-
-Also IMPORTANT note: the optional `/tinicard` module is not required for the main codebase to be operational, as it is a separate SAT solving software with a python wrapper to provide an API for interfacing with various python scripts.
-The main codebase will only attempt to import and use the API functions associated with this SAT solver if command line parameter `--solver_name=tinicard` is specified, and if not, will default to using the Minicard SAT solver through the PySAT python library.
-
+ 
+Copyright (c) 2024 Commonwealth Scientific and Industrial Research Organisation (CSIRO) ABN 41 687 119 230.
+ 
+This work is freely available for non-commercial scientific research, non-commercial education, or non-commercial research projects, under the CSIRO Non-Commercial License (based on BSD 3-Clause Clear). We welcome commercial enquiries and business partnership opportunities: https://bioinformatics.csiro.au/get-in-touch/
+ 
+Genomator web (https://genomator.csiro.au/) is a lite version of Genomator and allows free access for everyone. The underlying source of the lite version is also freely available via that website, under the Apache License, Version 2.0.
+ 
+Note that the optional module in `/tinicard` is based on a GPLv2+ codebase and is therefore licensed under the GNU GPLv2+. The optional `/tinicard` module is not required for the main codebase to be operational, as it is a separate SAT solving software with a python wrapper to provide an API for interfacing with various python scripts. The main codebase will only attempt to import and use the API functions associated with this SAT solver if command line parameter `--solver_name=tinicard` is specified, and if not, will default to using the Minicard SAT solver through the PySAT python library.
 
