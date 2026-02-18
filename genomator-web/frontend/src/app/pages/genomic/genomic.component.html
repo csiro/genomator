@@ -116,7 +116,7 @@
             <form [formGroup]="form" class="needs-validation" novalidate>
               <div class="mb-3 row">
                 <label for="filePicker" class="col-sm-3 col-form-label">
-                  <strong> Upload VCF file: </strong></label
+                  <strong> Add VCF file: </strong></label
                 >
                 <div class="col-sm-8">
                   <input
@@ -636,7 +636,7 @@
                   [attr.aria-label]="
                     disableDownload || !spikeFileContent
                       ? !spikeFileContent
-                        ? 'Upload spike CSV to enable spiked results'
+                        ? 'Add spike CSV to enable spiked results'
                         : 'Spiked results not ready to download'
                       : 'Download spiked results'
                   "
@@ -667,16 +667,16 @@
 
           <ul class="bullet-list list-unstyled pl-0">
             <li>
-              <b>Upload VCF file</b> - You will need to upload and tell the
+              <b>Add VCF file</b> - You will need to add the file and tell the
               software a bit about your VCF data (compatibility upto
               <a href="https://samtools.github.io/hts-specs/VCFv4.3.pdf"
                 >VCF specification 4.3</a
               >)
             </li>
             <li>
-              <b>Optional Spike CSV file:</b> - You will need to upload your CSV
+              <b>Optional Spike CSV file:</b> - You will need to add your CSV
               data in a way that is compatible with the VCF data you have
-              uploaded. The CSV file should contain rows of comma-separated
+              selected. The CSV file should contain rows of comma-separated
               values, where each row represents a genomic variant to be spiked
               into the synthetic data. Each row must include the 8 mandatory
               fields followed by number of samples matching the synthetic data
@@ -799,58 +799,9 @@
       <div class="col-10 mx-auto">
         <div class="card-body">
           <h1>License</h1>
-
           <p>
-            Copyright (c) 2025 Commonwealth Scientific and Industrial Research
-            Organisation (CSIRO) ABN 41 687 119 230.
-          </p>
-          <p>
-            CSIRO hereby grants you a non-exclusive, non-transferable, free of
-            charge right to copy, modify, merge, publish, distribute, and
-            sublicense this software for the sole purpose of performing
-            non-commercial scientific research, non-commercial education, or
-            non-commercial research projects.
-          </p>
-
-          <p>
-            Any other use, in particular any use for commercial purposes, is
-            prohibited. This includes, without limitation, incorporation in a
-            commercial product, use in a commercial service, or production of
-            other artefacts for commercial purposes.
-          </p>
-          <p>
-            Neither the name of CSIRO nor the names of its authors may be used
-            to endorse or promote products derived from this software without
-            specific prior written permission of CSIRO.
-          </p>
-          <p>
-            NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
-            GRANTED BY THIS LICENSE. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT
-            WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-            TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-            PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR CSIRO
-            BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-            ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-            CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-            SOFTWARE.
-          </p>
-          <p>
-            You understand and agree that the authors and/or CSIRO are under no
-            obligation to provide either maintenance services, update services,
-            notices of latent defects, or corrections of defects with regard to
-            the Software.
-          </p>
-          <p>
-            The Software may contain third party material obtained by CSIRO
-            under licence. Your rights to such material as part of the Software
-            under this agreement is subject to any separate licence terms
-            identified by CSIRO as part of the Software release - including as
-            part of the Supplementary Licence, or as a separate file. Those
-            third party licence terms may require you to download the relevant
-            software from a third party site, or may mean that the third party
-            licensor (and not CSIRO) grants you a licence directly for those
-            components of the Software. It is your responsibility to ensure that
-            you have the necessary rights to such third party material.
+            Genomator webservice is licensed under the CC BY-SA 4.0 Creative
+            Commons Attribution-ShareAlike 4.0 International License.
           </p>
         </div>
       </div>
