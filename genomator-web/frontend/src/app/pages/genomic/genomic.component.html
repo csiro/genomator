@@ -657,6 +657,29 @@
       <div class="col-10 mx-auto">
         <div class="card-body">
           <h1 class="card-title-HowTo" #how_to_use>How to use</h1>
+          <div class="alert alert-warning">
+            VCF file must be valid before you proceed with Genomator Web. Due to
+            unavailability if bcftools in WASM environment, you can use bcftools
+            locally using following commands to verify the correctness.
+            <hr />
+            You can use the following command to check if the VCF file is valid
+            and can be read by bcftools without errors.
+
+            <pre>
+              
+bcftools view myfile.vcf > /dev/null</pre
+            >
+            <hr />
+            Verifying the VCF version is also recommended. You can use the
+            following command.
+            <pre>
+
+bcftools view -h myfile.vcf | sed -n 's/^##fileformat=//p'</pre
+            >
+            should return a version number 4.2 or 4.3, as Genomator web only
+            supports VCF specifications 4.2 and 4.3.
+          </div>
+
           The <i>'Genomic Data Generation'</i> page will load an interface
           hosting a lite version of Genomator software for use generating
           synthetic datasets from small genomic VCF datafiles.<br />
