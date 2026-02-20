@@ -37,6 +37,7 @@
         <div class="card-body">
           <h1 class="card-title-DataSubmission">Offline Evaluation</h1>
 
+          <h1>Dependencies</h1>
           <p>Install the following dependencies:</p>
           <pre aria-label="Shell command to install required dependencies">
           <code [highlight]="deps" language="shell"></code>
@@ -46,9 +47,13 @@
             Please run the following script in your computer using the
             attributes mentioned above:
           </p>
-
+          <h1>Privacy Metric Evaluation</h1>
           <pre aria-label="Python script to evaluate the privacy metric">
-          <code [highlight]="code" language="python"></code>
+          <code [highlight]="codePrivacy" language="python"></code>
+        </pre>
+          <h1>Accuracy Metric Evaluation</h1>
+          <pre aria-label="Python script to evaluate the accuracy metric">
+          <code [highlight]="codeAccuracy" language="python"></code>
         </pre>
         </div>
       </div>

@@ -12,7 +12,8 @@ import { catchError } from 'rxjs';
   imports: [HttpClientModule, HighlightModule],
 })
 export class CalculatePrivacyMetricComponent implements OnInit {
-  code = '';
+  codePrivacy = '';
+  codeAccuracy = '';
   deps = '';
 
   constructor(
@@ -30,7 +31,19 @@ export class CalculatePrivacyMetricComponent implements OnInit {
         }),
       )
       .subscribe((data) => {
-        this.code = data;
+        this.codePrivacy = data;
+      });
+
+    this.http
+      .get('/assets/accuracy_metric.py', { responseType: 'text' })
+      .pipe(
+        catchError((error) => {
+          this.toastr.error('Error fetching code');
+          return 'Error fetching code';
+        }),
+      )
+      .subscribe((data) => {
+        this.codeAccuracy = data;
       });
 
     this.http
