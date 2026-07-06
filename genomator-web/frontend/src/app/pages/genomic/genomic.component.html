@@ -173,15 +173,19 @@
               </div>
 
               <div class="alert alert-warning">
-                Since all the computations are performed on your own device,
-                large VCF files may cause performance issues or browser crashes.
-                It is recommended to use smaller VCF (less than 100,000 variants
-                and 1000 samples).
-                <hr />
-                Genomator web only supports uncompressed VCF files at the moment
-                and should be carefully selected in accordance with your
-                computer's RAM capacity. Only VCF files smaller than 1 GB are
-                permitted.
+                <strong>Genomator runs entirely in your browser</strong>, so
+                processing is limited by your device's memory. The hard limit is
+                <strong>100,000,000 data points (variants &times; samples)</strong>.
+                For example:
+                <ul class="mb-1 mt-1">
+                  <li>100,000 variants &rarr; max ~1,000 samples</li>
+                  <li>20,000 variants &rarr; max ~5,000 samples</li>
+                  <li>10,000 samples &rarr; max ~10,000 variants</li>
+                </ul>
+                <strong>File size limit: 1 GB, uncompressed VCF only.</strong>
+                Note this is a separate limit &mdash; a file can be under 1 GB
+                and still exceed the data-point cap (e.g. many samples with few
+                variants, or vice versa).
                 <hr />
                 Computational time is expected to increase with the size of file
                 and the parameter combination as explained in
