@@ -3,85 +3,634 @@
     <div class="row">
       <div class="col-10 mx-auto">
         <div class="card-body">
-          <h1 class="card-title-DataSubmission">Evaluate Privacy Metric</h1>
+          <h1 class="card-title-DataSubmission">Evaluate Synthetic Data</h1>
 
-          To evaluate the privacy metric of the generated data, you need the
-          following information:
-
-          <ul class="bullet-list list-unstyled pl-0">
-            <li>
-              <b>Input VCF file</b> - The original VCF file containing your
-              genomic data.
-            </li>
-            <li>
-              <b>Generated VCF file</b> - The synthetic VCF file generated from
-              the original data.
-            </li>
-            <li>
-              <b>Number of trials (Optional) </b> - The number of times the
-              evaluation is repeated to ensure accuracy.
-            </li>
-            <li>
-              <b>Degree of privacy metric (Optional) </b> - Number of SNPs
-              involved in each private combination.
-            </li>
-          </ul>
-          <h1 class="card-title-DataSubmission">Evaluate Accuracy Metric</h1>
-
-          To evaluate the accuracy metric of the generated data, you need the
-          following information:
+          Upload the original VCF file and the synthetic VCF file generated
+          for it on the <a routerLink="/genomic">Generate</a> tab, then choose
+          a metric to evaluate.
 
           <ul class="bullet-list list-unstyled pl-0">
             <li>
-              <b>Input VCF file</b> - The original VCF file containing your
-              genomic data.
+              <b>Accuracy Metric</b> - Measures how closely the synthetic
+              data reproduces the statistical distribution of the original
+              data, using a sliced Wasserstein distance.
             </li>
             <li>
-              <b>Generated VCF file</b> - The synthetic VCF file generated from
-              the original data.
+              <b>Privacy Metric</b> - Measures how much private information
+              from the original data could be inferred from the synthetic
+              data, using unique-combination reproduction rates.
             </li>
             <li>
-              <b>Number of trials (Optional) </b> - The number of times the
-              evaluation is repeated to ensure accuracy.
-            </li>
-            <li>
-              <b>Slices of accuracy metric (Optional) </b> - The number of
-              random 1-D projections to use per Wasserstein distance
-              calculation.
+              <b>In-Depth Privacy Metric</b> - A more thorough membership-leakage
+              check: splits your input cohort in half, generates synthetic data
+              from each half separately, and checks whether real individuals sit
+              suspiciously closer to the synthetic data generated from their own
+              half than from the other half. Only needs your original input VCF
+              &mdash; it re-runs Genomator's generation twice internally, so it
+              takes noticeably longer than the other two methods.
             </li>
           </ul>
-          <hr />
-          Scripts and dependencies for evaluating the privacy and accuracy
-          metrics are provided below.
+
+          <div class="alert alert-success">
+            All metric evaluation executes entirely on
+            <strong>your own computer</strong> in your web browser. Data is
+            <strong>never</strong> transmitted outside your device.
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="card mx-auto shadow mb-4">
+  <div class="card mx-auto shadow mb-4 card-with-top-gap">
     <div class="row">
       <div class="col-10 mx-auto">
         <div class="card-body">
-          <h1 class="card-title-DataSubmission">Offline Evaluation</h1>
+          <h1 class="card-title-DataSubmission">Calculate Metric</h1>
+          <br />
 
-          <h1>Dependencies</h1>
-          <p>Install the following dependencies:</p>
-          <pre aria-label="Shell command to install required dependencies">
-          <code [highlight]="deps" language="shell"></code>
-        </pre>
+          <div
+            *ngIf="loading"
+            role="region"
+            aria-label="Initializing libraries"
+            aria-live="polite"
+            aria-atomic="true"
+            aria-busy="true"
+          >
+            <div
+              class="spinner-border"
+              role="status"
+              aria-label="Loading libraries"
+              aria-live="polite"
+              aria-busy="true"
+            >
+              <span class="sr-only">Loading…</span>
+            </div>
+            <br />
+            Loading Status:
+            <span class="sr-only" id="calc-loading-status-hint"
+              >Library initialization status updates while loading.</span
+            >
+            <div
+              class="alert alert-secondary code-block"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              aria-relevant="additions text"
+              aria-describedby="calc-loading-status-hint"
+              [innerHTML]="loadingStatus"
+            ></div>
+          </div>
 
-          <p>
-            Please run the following script in your computer using the
-            attributes mentioned above:
-          </p>
-          <h1>Privacy Metric Evaluation</h1>
-          <pre aria-label="Python script to evaluate the privacy metric">
-          <code [highlight]="codePrivacy" language="python"></code>
-        </pre>
-          <h1>Accuracy Metric Evaluation</h1>
-          <pre aria-label="Python script to evaluate the accuracy metric">
-          <code [highlight]="codeAccuracy" language="python"></code>
-        </pre>
+          <div *ngIf="!loading">
+            <div class="mb-3 row">
+              <div class="col-12 col-xl-4 mb-2 mb-xl-0">
+                <button
+                  type="button"
+                  class="btn btn-primary1 w-100"
+                  [class.active]="mode === CalculateMode.Accuracy"
+                  (click)="setMode(CalculateMode.Accuracy)"
+                >
+                  Run Accuracy Metric
+                </button>
+              </div>
+              <div class="col-12 col-xl-4 mb-2 mb-xl-0">
+                <button
+                  type="button"
+                  class="btn btn-primary1 w-100"
+                  [class.active]="mode === CalculateMode.Privacy"
+                  (click)="setMode(CalculateMode.Privacy)"
+                >
+                  Run Privacy Metric
+                </button>
+              </div>
+              <div class="col-12 col-xl-4">
+                <button
+                  type="button"
+                  class="btn btn-primary1 w-100"
+                  [class.active]="mode === CalculateMode.InDepth"
+                  (click)="setMode(CalculateMode.InDepth)"
+                >
+                  Run In-Depth Privacy Metric
+                </button>
+              </div>
+            </div>
+            <hr />
+
+            <div *ngIf="mode === CalculateMode.Privacy" class="alert alert-warning">
+              The default number of trials (100,000) can take a while to
+              compute for VCF files with many samples. Reduce the number of
+              trials below if you just want a quick estimate.
+            </div>
+
+            <div *ngIf="mode === CalculateMode.InDepth" class="alert alert-warning">
+              <strong>This method re-computes synthetic data via Genomator
+              twice</strong> &mdash; once for each half of your input cohort
+              &mdash; using the generation parameters you choose below (the
+              same ones as the Generate tab). Only upload your
+              <strong>original input VCF</strong>; you do not need a
+              previously-generated synthetic file for this method. Because it
+              runs generation twice on half-sized cohorts, it will take longer
+              than the other two metrics, roughly comparable to running the
+              Generate tab twice.
+            </div>
+
+            <form [formGroup]="form" class="needs-validation" novalidate>
+              <div class="mb-3 row">
+                <label for="inputFilePicker" class="col-sm-3 col-form-label">
+                  <strong>Input VCF file:</strong></label
+                >
+                <div class="col-sm-8">
+                  <input
+                    formControlName="inputFilePicker"
+                    accept=".vcf"
+                    class="form-control"
+                    type="file"
+                    id="inputFilePicker"
+                    (change)="handleInputPick($event)"
+                  />
+                </div>
+              </div>
+
+              <div *ngIf="mode !== CalculateMode.InDepth" class="mb-3 row">
+                <label
+                  for="generatedFilePicker"
+                  class="col-sm-3 col-form-label"
+                >
+                  <strong>Generated (synthetic) VCF file:</strong></label
+                >
+                <div class="col-sm-8">
+                  <input
+                    formControlName="generatedFilePicker"
+                    accept=".vcf"
+                    class="form-control"
+                    type="file"
+                    id="generatedFilePicker"
+                    (change)="handleGeneratedPick($event)"
+                  />
+                </div>
+              </div>
+
+              <div
+                *ngIf="mode === CalculateMode.Accuracy"
+                class="mb-3 row"
+                role="group"
+                aria-labelledby="accuracyTrials_label"
+              >
+                <label
+                  id="accuracyTrials_label"
+                  for="accuracyTrials"
+                  class="col-sm-3 col-form-label"
+                  ><strong>Number of trials</strong></label
+                >
+                <div class="col-sm-8">
+                  <input
+                    id="accuracyTrials"
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputmode="numeric"
+                    (keypress)="allowNumberOnly($event)"
+                    formControlName="accuracyTrials"
+                    class="form-control"
+                    required
+                    [attr.aria-required]="true"
+                    [attr.aria-invalid]="
+                      form.controls.accuracyTrials.invalid ? 'true' : 'false'
+                    "
+                    aria-describedby="accuracyTrials_error"
+                  />
+                  <div
+                    id="accuracyTrials_error"
+                    class="invalid-feedback"
+                    style="display: block"
+                    role="alert"
+                    aria-live="assertive"
+                    *ngIf="
+                      form.controls.accuracyTrials.touched &&
+                      form.controls.accuracyTrials.invalid
+                    "
+                  >
+                    Please input a positive whole integer value.
+                  </div>
+                </div>
+              </div>
+
+              <div
+                *ngIf="mode === CalculateMode.Accuracy"
+                class="mb-3 row"
+                role="group"
+                aria-labelledby="slices_label"
+              >
+                <label
+                  id="slices_label"
+                  for="slices"
+                  class="col-sm-3 col-form-label"
+                  ><strong>Slices</strong> (random 1-D projections per
+                  trial)</label
+                >
+                <div class="col-sm-8">
+                  <input
+                    id="slices"
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputmode="numeric"
+                    (keypress)="allowNumberOnly($event)"
+                    formControlName="slices"
+                    class="form-control"
+                    required
+                    [attr.aria-required]="true"
+                    [attr.aria-invalid]="
+                      form.controls.slices.invalid ? 'true' : 'false'
+                    "
+                    aria-describedby="slices_error"
+                  />
+                  <div
+                    id="slices_error"
+                    class="invalid-feedback"
+                    style="display: block"
+                    role="alert"
+                    aria-live="assertive"
+                    *ngIf="
+                      form.controls.slices.touched &&
+                      form.controls.slices.invalid
+                    "
+                  >
+                    Please input a positive whole integer value.
+                  </div>
+                </div>
+              </div>
+
+              <div
+                *ngIf="mode === CalculateMode.Privacy"
+                class="mb-3 row"
+                role="group"
+                aria-labelledby="privacyTrials_label"
+              >
+                <label
+                  id="privacyTrials_label"
+                  for="privacyTrials"
+                  class="col-sm-3 col-form-label"
+                  ><strong>Number of trials</strong></label
+                >
+                <div class="col-sm-8">
+                  <input
+                    id="privacyTrials"
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputmode="numeric"
+                    (keypress)="allowNumberOnly($event)"
+                    formControlName="privacyTrials"
+                    class="form-control"
+                    required
+                    [attr.aria-required]="true"
+                    [attr.aria-invalid]="
+                      form.controls.privacyTrials.invalid ? 'true' : 'false'
+                    "
+                    aria-describedby="privacyTrials_error"
+                  />
+                  <div
+                    id="privacyTrials_error"
+                    class="invalid-feedback"
+                    style="display: block"
+                    role="alert"
+                    aria-live="assertive"
+                    *ngIf="
+                      form.controls.privacyTrials.touched &&
+                      form.controls.privacyTrials.invalid
+                    "
+                  >
+                    Please input a positive whole integer value.
+                  </div>
+                </div>
+              </div>
+
+              <div
+                *ngIf="mode === CalculateMode.Privacy"
+                class="mb-3 row"
+                role="group"
+                aria-labelledby="degree_label"
+              >
+                <label
+                  id="degree_label"
+                  for="degree"
+                  class="col-sm-3 col-form-label"
+                  ><strong>Degree</strong> (number of SNPs per private
+                  combination)</label
+                >
+                <div class="col-sm-8">
+                  <input
+                    id="degree"
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputmode="numeric"
+                    (keypress)="allowNumberOnly($event)"
+                    formControlName="degree"
+                    class="form-control"
+                    required
+                    [attr.aria-required]="true"
+                    [attr.aria-invalid]="
+                      form.controls.degree.invalid ? 'true' : 'false'
+                    "
+                    aria-describedby="degree_error"
+                  />
+                  <div
+                    id="degree_error"
+                    class="invalid-feedback"
+                    style="display: block"
+                    role="alert"
+                    aria-live="assertive"
+                    *ngIf="
+                      form.controls.degree.touched &&
+                      form.controls.degree.invalid
+                    "
+                  >
+                    Please input a positive whole integer value.
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="mode === CalculateMode.InDepth">
+                <div
+                  class="mb-3 row"
+                  role="group"
+                  aria-labelledby="number_of_data_label"
+                >
+                  <label
+                    id="number_of_data_label"
+                    for="number_of_data"
+                    class="col-sm-3 col-form-label"
+                    ><strong>Synthetic samples per half</strong></label
+                  >
+                  <div class="col-sm-8">
+                    <input
+                      id="number_of_data"
+                      type="number"
+                      min="1"
+                      step="1"
+                      inputmode="numeric"
+                      (keypress)="allowNumberOnly($event)"
+                      formControlName="number_of_data"
+                      class="form-control"
+                      required
+                      [attr.aria-required]="true"
+                      [attr.aria-invalid]="
+                        form.controls.number_of_data.invalid ? 'true' : 'false'
+                      "
+                      aria-describedby="number_of_data_error"
+                    />
+                    <div
+                      id="number_of_data_error"
+                      class="invalid-feedback"
+                      style="display: block"
+                      role="alert"
+                      aria-live="assertive"
+                      *ngIf="
+                        form.controls.number_of_data.touched &&
+                        form.controls.number_of_data.invalid
+                      "
+                    >
+                      Please input a positive whole integer value.
+                    </div>
+                  </div>
+                </div>
+
+                Generation profile for both halves (Selected -
+                <span *ngIf="genMode === GenParamMode.Balanced"
+                  >Balanced accuracy and privacy</span
+                >
+                <span *ngIf="genMode === GenParamMode.HighAccuracy"
+                  >High accuracy and low privacy</span
+                >
+                <span *ngIf="genMode === GenParamMode.HighPrivacy"
+                  >High privacy and low accuracy</span
+                >
+                <span *ngIf="genMode === GenParamMode.Advanced"
+                  >Advanced Configuration</span
+                >):
+                <hr />
+                <div class="mb-3 row">
+                  <div class="col-12 col-xl-3 mb-2 mb-xl-0">
+                    <button
+                      type="button"
+                      class="btn btn-primary1 w-100"
+                      [class.active]="genMode === GenParamMode.Balanced"
+                      (click)="setGenMode(GenParamMode.Balanced)"
+                    >
+                      Balanced
+                    </button>
+                  </div>
+                  <div class="col-12 col-xl-3 mb-2 mb-xl-0">
+                    <button
+                      type="button"
+                      class="btn btn-primary1 w-100"
+                      [class.active]="genMode === GenParamMode.HighAccuracy"
+                      (click)="setGenMode(GenParamMode.HighAccuracy)"
+                    >
+                      High Accuracy
+                    </button>
+                  </div>
+                  <div class="col-12 col-xl-3 mb-2 mb-xl-0">
+                    <button
+                      type="button"
+                      class="btn btn-primary1 w-100"
+                      [class.active]="genMode === GenParamMode.HighPrivacy"
+                      (click)="setGenMode(GenParamMode.HighPrivacy)"
+                    >
+                      High Privacy
+                    </button>
+                  </div>
+                  <div class="col-12 col-xl-3">
+                    <button
+                      type="button"
+                      class="btn btn-primary1 w-100"
+                      [class.active]="genMode === GenParamMode.Advanced"
+                      (click)="setGenMode(GenParamMode.Advanced)"
+                    >
+                      Advanced
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="mb-3 row"
+                  role="group"
+                  aria-labelledby="cluster_group_size_label"
+                >
+                  <label
+                    id="cluster_group_size_label"
+                    for="cluster_group_size"
+                    class="col-sm-3 col-form-label"
+                    ><strong>Cluster Group Size</strong> (N)</label
+                  >
+                  <div class="col-sm-8">
+                    <input
+                      id="cluster_group_size"
+                      type="number"
+                      min="1"
+                      step="1"
+                      inputmode="numeric"
+                      (keypress)="allowNumberOnly($event)"
+                      formControlName="cluster_group_size"
+                      class="form-control"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div
+                  *ngIf="!form.getRawValue().auto_looseness"
+                  class="mb-3 row"
+                  role="group"
+                  aria-labelledby="looseness_label"
+                >
+                  <label
+                    id="looseness_label"
+                    for="looseness"
+                    class="col-sm-3 col-form-label"
+                    ><strong>Looseness</strong> (L =
+                    {{ form.getRawValue().looseness }})</label
+                  >
+                  <div class="col-sm-8">
+                    <input
+                      id="looseness"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      formControlName="looseness"
+                      class="form-range"
+                    />
+                  </div>
+                </div>
+
+                <div
+                  *ngIf="genMode === GenParamMode.Advanced"
+                  class="mb-3 row"
+                  role="group"
+                  aria-labelledby="auto_looseness_label"
+                >
+                  <label
+                    id="auto_looseness_label"
+                    for="auto_looseness"
+                    class="col-sm-3 col-form-label"
+                    ><strong>Set looseness automatically?</strong>
+                  </label>
+                  <div class="col-sm-8">
+                    <input
+                      id="auto_looseness"
+                      type="checkbox"
+                      formControlName="auto_looseness"
+                      class="form-check-input"
+                    />
+                  </div>
+                </div>
+
+                <div
+                  class="mb-3 row"
+                  role="group"
+                  aria-labelledby="exception_space_label"
+                >
+                  <label
+                    id="exception_space_label"
+                    for="exception_space"
+                    class="col-sm-3 col-form-label"
+                    ><strong>Rare pair attenuation</strong> (Z =
+                    {{ form.getRawValue().exception_space }})</label
+                  >
+                  <div class="col-sm-8">
+                    <input
+                      id="exception_space"
+                      type="range"
+                      min="0"
+                      max="5"
+                      step="0.05"
+                      formControlName="exception_space"
+                      class="form-range"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <br />
+              <div class="mb-3 col-12" aria-live="polite">
+                <button
+                  type="button"
+                  class="btn btn-primary1 mx-auto d-block w-100"
+                  (click)="runMetric()"
+                  [disabled]="disableSubmit"
+                  [attr.aria-label]="
+                    mode === CalculateMode.Accuracy
+                      ? 'Run the accuracy metric evaluation'
+                      : mode === CalculateMode.Privacy
+                        ? 'Run the privacy metric evaluation'
+                        : 'Run the in-depth privacy metric evaluation'
+                  "
+                >
+                  {{
+                    mode === CalculateMode.Accuracy
+                      ? 'Run Accuracy Metric'
+                      : mode === CalculateMode.Privacy
+                        ? 'Run Privacy Metric'
+                        : 'Run In-Depth Privacy Metric'
+                  }}
+                </button>
+              </div>
+            </form>
+
+            <div *ngIf="!disableLog" aria-live="polite">
+              <hr />
+              Status:
+              <div
+                [class]="statusClass"
+                [innerHTML]="status"
+                role="status"
+              ></div>
+
+              <div *ngIf="result !== null" class="alert alert-info">
+                <strong
+                  >{{
+                    mode === CalculateMode.Accuracy
+                      ? 'Accuracy score (1 = identical distributions):'
+                      : mode === CalculateMode.Privacy
+                        ? 'Privacy score (1 = no detectable leakage):'
+                        : 'In-depth privacy score (1 = no detectable membership leakage):'
+                  }}
+                </strong>
+                {{ result }}
+              </div>
+
+              <div class="mb-3 row">
+                <div class="col-sm-12">
+                  <div class="progress">
+                    <div
+                      [style]="{ width: progress + '%' }"
+                      class="progress-bar"
+                      role="progressbar"
+                      aria-label="progress"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      [attr.aria-valuenow]="progress"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              Log:
+              <textarea
+                id="calc-pipeline-log"
+                class="form-control code-block"
+                role="log"
+                rows="7"
+                readonly
+                aria-live="polite"
+                aria-relevant="additions text"
+                [value]="logging_message"
+              ></textarea>
+            </div>
+          </div>
         </div>
       </div>
     </div>

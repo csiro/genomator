@@ -36,7 +36,6 @@
     "lodash": "^4.17.21",
     "ngx-highlightjs": "^8.0.0",
     "ngx-toastr": "^16.2.0",
-    "popper": "^1.0.1",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
     "webpack": "^5.99.9",

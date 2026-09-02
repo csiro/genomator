@@ -41,6 +41,12 @@ export class PyodideService {
         log_function("Loading in Genomator for tabular data...")
         PyodideService.pyodide.runPython(await (await fetch('assets/genomator_mini_tabular')).text());
         PyodideService.pyodide.runPython("silent=False"); // verbose
+        log_function("Loading in accuracy metric evaluator...")
+        PyodideService.pyodide.runPython(await (await fetch('assets/accuracy_metric_pyodide.py')).text());
+        log_function("Loading in privacy metric evaluator...")
+        PyodideService.pyodide.runPython(await (await fetch('assets/privacy_metric_pyodide.py')).text());
+        log_function("Loading in in-depth privacy metric evaluator...")
+        PyodideService.pyodide.runPython(await (await fetch('assets/indepth_privacy_metric_pyodide.py')).text());
         log_function("Pyodide loaded.")
       } else {
         log_function("Pyodide already loaded.")
@@ -60,7 +66,7 @@ export class PyodideService {
   }
 
   async execute(f: string, args: (string | number)[]) {
-    await PyodideService.pyodide.globals.get(f).call(null, ...args);
+    return await PyodideService.pyodide.globals.get(f).call(null, ...args);
   }
 
   readFile(file: string) : Uint8Array {
