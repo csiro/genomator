@@ -23,8 +23,11 @@ export class PyodideService {
         await PyodideService.pyodide.loadPackage("python-sat");
         log_function("Loading in numpy...")
         await PyodideService.pyodide.loadPackage("numpy");
-        log_function("Loading in pysam...")
-        await PyodideService.pyodide.loadPackage('pysam');
+        // scipy (and the openblas it pulls in) is what makes the accuracy
+        // metric's random projections tractable: its sparse matrices suit
+        // genotype data, which is mostly reference alleles
+        log_function("Loading in scipy...")
+        await PyodideService.pyodide.loadPackage("scipy");
         log_function("Loading in click...")
         await PyodideService.pyodide.loadPackage('click');
         log_function("Loading in micropip...")
@@ -36,6 +39,12 @@ export class PyodideService {
         // read and load-in python script
         log_function("setting up Python environment...")
         PyodideService.pyodide.runPython("__name__='loading_stuff'"); // prevent __name__=="__main__" execution
+        // shared VCF parsing is written to the Pyodide filesystem rather than
+        // exec'd, so the scripts below can `import vcf_parsing` normally
+        PyodideService.pyodide.FS.writeFile(
+          'vcf_parsing.py',
+          await (await fetch('assets/vcf_parsing.py')).text(),
+        );
         log_function("Loading in Genomator for genome data...")
         PyodideService.pyodide.runPython(await (await fetch('assets/genomator_mini')).text());
         log_function("Loading in Genomator for tabular data...")

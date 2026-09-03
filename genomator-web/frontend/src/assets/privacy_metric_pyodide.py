@@ -17,9 +17,9 @@
 
 # In-browser (Pyodide) privacy metric evaluation.
 #
-# This mirrors assets/privacy_metric.py, but parses VCFs with vcfpy (already
-# loaded into the Pyodide runtime for genome generation) instead of cyvcf2,
-# since cyvcf2 has no WASM/Emscripten build available.
+# This mirrors assets/privacy_metric.py, but reads genotypes through
+# vcf_parsing instead of cyvcf2, since cyvcf2 has no WASM/Emscripten build
+# available.
 
 from asyncio import sleep
 from collections import Counter
@@ -27,7 +27,8 @@ from functools import reduce
 import math
 
 import numpy as np
-import vcfpy
+
+from vcf_parsing import parse_vcf_to_record_columns
 
 PRIVACY_TRIALS_DEFAULT = 100000
 PRIVACY_DEGREE_DEFAULT = 4
@@ -47,39 +48,6 @@ async def privacy_metric_progress(itera, start_message, label, skip=0):
         yield i
     print(f"{label} {l}/{l}")
     await sleep(0)
-
-
-async def parse_vcf_to_record_columns(vcf_file):
-    print(f"loading VCF file: {vcf_file}")
-    await sleep(0)
-    reader = vcfpy.Reader.from_path(vcf_file)
-    num_samples = len(reader.header.samples.names)
-    assert num_samples > 0, "VCF file does not contain any samples"
-    columns = []
-    num_records = 0
-    for j, record in enumerate(reader):
-        ploidy = None
-        haplotype_columns = None
-        for call in record.calls:
-            if ploidy is None:
-                ploidy = call.ploidy
-                haplotype_columns = [[] for _ in range(ploidy)]
-            assert call.ploidy == ploidy, "genome ploidies must be identical"
-            alleles = call.gt_alleles
-            for h in range(ploidy):
-                allele = alleles[h]
-                assert allele is not None, "cannot currently work with missing data"
-                haplotype_columns[h].append(allele)
-        if haplotype_columns is not None:
-            columns.extend(bytes(column) for column in haplotype_columns)
-        num_records += 1
-        if j & 63 == 0:
-            print(f"loaded variants {j}")
-            await sleep(0)
-    reader.close()
-    print(f"loaded variants {num_records}/{num_records}")
-    await sleep(0)
-    return columns
 
 
 # count how many unique SNP combinations from a appear in b
@@ -161,7 +129,9 @@ async def Privacy_metric_exec(
     trials=PRIVACY_TRIALS_DEFAULT,
     degree=PRIVACY_DEGREE_DEFAULT,
 ):
+    print(f"loading VCF file: {input_vcf_file}")
     input_records = await parse_vcf_to_record_columns(input_vcf_file)
+    print(f"loading VCF file: {generated_vcf_file}")
     generated_records = await parse_vcf_to_record_columns(generated_vcf_file)
     unique_reproduction_rate, absent_represented_rate = await get_unique_reproduction_rate(
         input_records, generated_records, degree, trials

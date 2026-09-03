@@ -17,19 +17,50 @@
 
 # In-browser (Pyodide) accuracy metric evaluation.
 #
-# This mirrors assets/accuracy_metric.py, but parses VCFs with vcfpy (already
-# loaded into the Pyodide runtime for genome generation) instead of cyvcf2,
-# and reimplements POT's sliced_wasserstein_distance/wasserstein_1d in plain
-# numpy, since POT ships compiled extensions with no WASM/Emscripten build.
+# This mirrors assets/accuracy_metric.py, but reimplements POT's
+# sliced_wasserstein_distance/wasserstein_1d in plain numpy, since POT ships
+# compiled extensions with no WASM/Emscripten build.
+#
+# The rest of the file is shaped by Pyodide running single threaded, on the
+# browser's UI thread, with a much tighter memory budget than native CPython:
+#
+#   * Genotypes are read by vcf_parsing, which goes straight at the raw VCF
+#     bytes with numpy rather than using vcfpy.  vcfpy allocates a Python object
+#     per record and per call, costing over five minutes for a 780 sample exome
+#     VCF here.
+#   * Random projections are applied one SNP block at a time in float32, so we
+#     never build the (num_snps x slices) float64 projection matrix or a
+#     float64 copy of the genotypes (~500MB each at exome scale).  Small blocks
+#     also keep the working set in cache and let the event loop run part way
+#     through a trial, so the tab stays responsive.
+#   * Genotype matrices are mostly reference alleles, so when scipy is present
+#     the blocks are held as sparse matrices, which makes the projections
+#     roughly ten times cheaper.  Without scipy the dense path is used instead
+#     and the results are unchanged.
 
 from asyncio import sleep
 import math
 
 import numpy as np
-import vcfpy
+
+from vcf_parsing import parse_vcf_to_genotype_matrix
+
+try:
+    from scipy import sparse
+except ImportError:  # scipy is optional; the dense path gives the same answers
+    sparse = None
 
 ACCURACY_TRIALS_DEFAULT = 50
 ACCURACY_SLICES_DEFAULT = 300
+
+# SNPs per block when applying random projections.  Blocks this small keep the
+# gaussian block and the float32 genotype copy in cache, which measurably beats
+# projecting the whole SNP axis in one multiply under WASM.
+PROJECTION_BLOCK_SNPS = 256
+
+# Only hold genotypes sparsely while they are mostly zeros; past this a sparse
+# copy costs both more time and more memory than the dense matrix.
+SPARSE_DENSITY_LIMIT = 0.5
 
 
 async def accuracy_metric_progress(itera, start_message, label, skip=0):
@@ -46,46 +77,51 @@ async def accuracy_metric_progress(itera, start_message, label, skip=0):
     await sleep(0)
 
 
-async def parse_vcf_to_genotype_matrix(vcf_file):
-    print(f"loading VCF file: {vcf_file}")
-    await sleep(0)
-    reader = vcfpy.Reader.from_path(vcf_file)
-    num_samples = len(reader.header.samples.names)
-    assert num_samples > 0, "VCF file does not contain any samples"
-    columns = []
-    num_records = 0
-    for j, record in enumerate(reader):
-        ploidy = None
-        haplotype_columns = None
-        for call in record.calls:
-            if ploidy is None:
-                ploidy = call.ploidy
-                haplotype_columns = [[] for _ in range(ploidy)]
-            assert call.ploidy == ploidy, "genome ploidies must be identical"
-            alleles = call.gt_alleles
-            for h in range(ploidy):
-                allele = alleles[h]
-                assert allele is not None, "cannot currently work with missing data"
-                haplotype_columns[h].append(int(allele))
-        if haplotype_columns is not None:
-            columns.extend(haplotype_columns)
-        num_records += 1
-        if j & 63 == 0:
-            print(f"loaded variants {j}")
+def build_projection_blocks(genotypes):
+    """Split genotypes along the SNP axis into blocks ready to be projected."""
+    num_snps = genotypes.shape[1]
+    blocks = [
+        genotypes[:, start : start + PROJECTION_BLOCK_SNPS]
+        for start in range(0, num_snps, PROJECTION_BLOCK_SNPS)
+    ]
+    if (
+        sparse is not None
+        and genotypes.size > 0
+        and np.count_nonzero(genotypes) <= SPARSE_DENSITY_LIMIT * genotypes.size
+    ):
+        return [sparse.csr_matrix(block, dtype=np.float32) for block in blocks]
+    return blocks
+
+
+def project_block(block, gaussian):
+    if sparse is not None and sparse.issparse(block):
+        return block @ gaussian
+    return block.astype(np.float32) @ gaussian
+
+
+async def project_onto_unit_directions(blocks1, blocks2, shape1, shape2, n_projections, rng):
+    """Project both genotype sets onto the same random unit length directions.
+
+    Identical to drawing a (num_snps, n_projections) gaussian matrix, scaling
+    each of its columns to unit length and multiplying, except that the SNP
+    axis is walked one block at a time.  Scaling each column by its length is
+    deferred to the end, which is exact: every column of the projected result
+    is linear in that one gaussian column.
+    """
+    projected1 = np.zeros((shape1, n_projections))
+    projected2 = np.zeros((shape2, n_projections))
+    sum_squares = np.zeros(n_projections)
+    for block_index, (block1, block2) in enumerate(zip(blocks1, blocks2)):
+        gaussian = rng.standard_normal(
+            (block1.shape[1], n_projections), dtype=np.float32
+        )
+        sum_squares += np.einsum("ij,ij->j", gaussian, gaussian, dtype=np.float64)
+        projected1 += project_block(block1, gaussian)
+        projected2 += project_block(block2, gaussian)
+        if block_index & 63 == 0:
             await sleep(0)
-    reader.close()
-    print(f"loaded variants {num_records}/{num_records}")
-    await sleep(0)
-    if not columns:
-        return np.zeros((num_samples, 0))
-    genotypes_array = np.array(columns, dtype=np.uint8).T
-    return genotypes_array
-
-
-def get_random_projections(d, n_projections, rng):
-    projections = rng.standard_normal((d, n_projections))
-    projections = projections / np.sqrt(np.sum(projections**2, axis=0, keepdims=True))
-    return projections
+    lengths = np.sqrt(sum_squares)
+    return projected1 / lengths, projected2 / lengths
 
 
 def quantile_function(qs, cws, xs):
@@ -118,11 +154,10 @@ def wasserstein_1d(u_values, v_values, u_weights, v_weights, p=2):
     return np.sum(delta * np.power(diff_quantiles, p), axis=0)
 
 
-def sliced_wasserstein_distance(X_s, X_t, a, b, n_projections, p, rng):
-    d = X_s.shape[1]
-    projections = get_random_projections(d, n_projections, rng)
-    X_s_projections = X_s @ projections
-    X_t_projections = X_t @ projections
+async def sliced_wasserstein_distance(blocks1, blocks2, a, b, n_projections, p, rng):
+    X_s_projections, X_t_projections = await project_onto_unit_directions(
+        blocks1, blocks2, a.shape[0], b.shape[0], n_projections, rng
+    )
     a_full = np.repeat(a[:, None], n_projections, axis=1)
     b_full = np.repeat(b[:, None], n_projections, axis=1)
     projected_emd = wasserstein_1d(X_s_projections, X_t_projections, a_full, b_full, p=p)
@@ -134,13 +169,15 @@ async def wasserstein_analyse(genotypes1, genotypes2, trials, slices):
     num_samples2 = genotypes2.shape[0]
     a = np.full(num_samples1, 1 / num_samples1)
     b = np.full(num_samples2, 1 / num_samples2)
+    blocks1 = build_projection_blocks(genotypes1)
+    blocks2 = build_projection_blocks(genotypes2)
     rng = np.random.default_rng()
     distances = []
     async for _ in accuracy_metric_progress(
         range(trials), "Computing sliced Wasserstein distance", "accuracy trial"
     ):
         distances.append(
-            sliced_wasserstein_distance(genotypes1, genotypes2, a, b, slices, 2, rng)
+            await sliced_wasserstein_distance(blocks1, blocks2, a, b, slices, 2, rng)
         )
     distance_mean = np.mean(distances)
     distance_std_dev = np.std(distances, ddof=1) if trials > 1 else 0.0
@@ -166,13 +203,17 @@ async def Accuracy_metric_exec(
     trials=ACCURACY_TRIALS_DEFAULT,
     slices=ACCURACY_SLICES_DEFAULT,
 ):
+    print(f"loading VCF file: {input_vcf_file}")
     genotypes1 = await parse_vcf_to_genotype_matrix(input_vcf_file)
+    print(f"loading VCF file: {generated_vcf_file}")
     genotypes2 = await parse_vcf_to_genotype_matrix(generated_vcf_file)
     assert genotypes1.shape[1] == genotypes2.shape[1], (
         "Input and generated VCFs should have the same number of SNPs"
     )
+    print("finished loading")
     mean, std_dev = await wasserstein_analyse(genotypes1, genotypes2, trials, slices)
     result = format_with_uncertainty(1 - mean, std_dev)
     print(f"RESULT:{result}")
     await sleep(0)
     return result
+

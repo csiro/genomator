@@ -26,6 +26,8 @@ import time
 
 from pysat.solvers import Solver
 import vcfpy
+
+from vcf_parsing import open_vcf, parse_vcf_to_sample_strings
 import click
 import numpy as np
 
@@ -58,53 +60,36 @@ async def async_print(*args):
 # parse_VCF_to_genome_strings(): parse a VCF file into an array of sample data, where
 # phased and unphased data get flattened into sequences of bytes objects
 async def parse_VCF_to_genome_strings(input_vcf_file, number_of_genomes):
-    with open(input_vcf_file,'r') as f:
-        lines = [l for l in f.readlines()]
-        header = [l for l in lines if l[0]=='#']
-        version = [l for l in header if l.startswith("##fileformat=")]
+    # Size limits are checked up front, before anything large gets allocated,
+    # so a file that would blow the WASM address space is rejected rather than
+    # half loaded.  Streaming the count keeps this pass itself cheap.
+    version_lines = []
+    num_samples = 0
+    num_records = 0
+    with open_vcf(input_vcf_file) as f:
+        for line in f:
+            if line.startswith(b"##fileformat="):
+                version_lines.append(line.decode().strip())
+            if line[0:1] == b"#":
+                continue
+            if num_records == 0:
+                num_samples = len(line.rstrip(b"\r\n").split(b"\t")) - 9
+            num_records += 1
+    assert len(version_lines) == 1, "VCF file is missing version information, please ensure the file starts with a line like '##fileformat=VCFv4.2'"
+    assert version_lines[0] in ["##fileformat=VCFv4.2","##fileformat=VCFv4.3"], "VCF file version not recognised, please ensure the file starts with a line like '##fileformat=VCFv4.2' or '##fileformat=VCFv4.3'"
+    assert num_records <= 100_000, "VCF file contains more than 100,000 variants, please reduce the size for processing."
+    assert num_records * num_samples <= 10**8, "VCF file contains more than 100 million data points, please reduce the size for processing. WASM address space is limited and this is to prevent memory overflow."
+    assert num_records * number_of_genomes <= 10**8, "Output VCF file contains more than 100 million data points, please reduce the size for processing. WASM address space is limited and this is to prevent memory overflow."
 
-        assert len(version) == 1, "VCF file is missing version information, please ensure the file starts with a line like '##fileformat=VCFv4.2'"
-        assert version[0].strip() in ["##fileformat=VCFv4.2","##fileformat=VCFv4.3"], "VCF file version not recognised, please ensure the file starts with a line like '##fileformat=VCFv4.2' or '##fileformat=VCFv4.3'"
-
-        rows = [l for l in lines if l[0]!='#']
-        num_samples = len(rows[0].strip().split('\t')) - 9
-        num_records = len(rows)
-        assert num_records <= 100_000, "VCF file contains more than 100,000 variants, please reduce the size for processing."
-        assert num_records * num_samples <= 10**8, "VCF file contains more than 100 million data points, please reduce the size for processing. WASM address space is limited and this is to prevent memory overflow."
-        assert num_records * number_of_genomes <= 10**8, "Output VCF file contains more than 100 million data points, please reduce the size for processing. WASM address space is limited and this is to prevent memory overflow."
-    genome_partials = []
-    genomes = []
-    reader = vcfpy.Reader.from_path(input_vcf_file)
-    ploidy = None
     await async_print("Beginning VCF file loading")
-    for j,record in enumerate(reader):
-        gt_phase_char = None
-        for i,c in enumerate(record.calls):
-            if ploidy is None:
-                ploidy = c.ploidy
-            assert c.ploidy == ploidy, "genome ploidies much be identical"
-            if gt_phase_char is None:
-                gt_phase_char = c.gt_phase_char
-            assert c.gt_phase_char == gt_phase_char, "cannot curently work with mixed phases per vcf row"
-            fragment = c.gt_alleles
-            if i>=len(genomes):
-                genomes.append([])
-                genome_partials.append([])
-            for f in fragment:
-                assert  f is not None, "cannot currently work with missing data"
-                genome_partials[i] += [f.to_bytes(1,"big")]
-        if j&31==0:
-            await async_print(f"loaded variants {j}/{num_records}")
-        if j&1023==0:
-            for jj in range(len(genomes)):
-                genomes[jj] += [b"".join(genome_partials[jj])]
-                genome_partials[jj] = []
-    reader.close()
-    await async_print(f"loaded variants {num_records}/{num_records}")
+
+    async def progress(num_loaded, total):
+        await async_print(f"loaded variants {num_loaded}/{num_records}")
+
+    genomes, ploidy = await parse_vcf_to_sample_strings(
+        input_vcf_file, progress=progress, require_uniform_phase=True
+    )
     await async_print("Finished VCF file loading")
-    for jj in range(len(genomes)):
-        genomes[jj] += [b"".join(genome_partials[jj])]
-    genomes = [b"".join(g) for g in genomes]
     return genomes,ploidy
 
 # parse_genome_strings_to_VCF(): output an array of bytes objects of flattened genome sample data

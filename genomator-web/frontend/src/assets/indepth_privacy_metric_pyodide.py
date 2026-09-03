@@ -25,9 +25,9 @@
 # synthetic data generated from the OTHER half ("out-distance"). Systematically
 # smaller in-distance than out-distance indicates membership leakage.
 #
-# Depends on Genomator_exec (genomator_mini) and parse_vcf_to_genotype_matrix
-# (accuracy_metric_pyodide.py), both loaded earlier in the same Pyodide session
-# by PyodideService.
+# Depends on Genomator_exec (genomator_mini), loaded earlier in the same
+# Pyodide session by PyodideService.  Genotypes are read through vcf_parsing;
+# vcfpy is still used to *write* the two half-VCFs, which it does well.
 
 from asyncio import sleep
 from copy import deepcopy
@@ -35,6 +35,8 @@ import math
 
 import numpy as np
 import vcfpy
+
+from vcf_parsing import parse_vcf_to_genotype_matrix
 
 
 async def split_vcf_by_sample(input_vcf_file, out_a, out_b, seed=None):
