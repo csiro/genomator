@@ -47,8 +47,10 @@ from vcf_parsing import parse_vcf_to_genotype_matrix
 
 try:
     from scipy import sparse
+    print("scipy available: accuracy metric will use sparse genotype blocks")
 except ImportError:  # scipy is optional; the dense path gives the same answers
     sparse = None
+    print("scipy not available: accuracy metric will use dense genotype blocks")
 
 ACCURACY_TRIALS_DEFAULT = 50
 ACCURACY_SLICES_DEFAULT = 300
