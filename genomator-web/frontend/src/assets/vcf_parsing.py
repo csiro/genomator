@@ -178,11 +178,17 @@ async def parse_vcf_haplotype_columns(
 
 
 async def parse_vcf_to_genotype_matrix(vcf_file, progress=print_progress):
-    """Genotypes as a (num_samples, num_records * ploidy) array of allele indices."""
+    """Genotypes as a (num_samples, num_records * ploidy) array of allele indices.
+
+    Returned C-contiguous.  Transposing the record-major columns gives an
+    F-contiguous view for free, but handing numpy a large F-contiguous operand
+    makes its matmul several times slower, which the distance work in the
+    in-depth privacy metric pays directly.  One copy here is cheaper than that.
+    """
     columns, num_samples, _, _ = await parse_vcf_haplotype_columns(vcf_file, progress)
     if not columns:
         return np.zeros((num_samples, 0), dtype=np.uint8)
-    return np.array(columns, dtype=np.uint8).T
+    return np.ascontiguousarray(np.array(columns, dtype=np.uint8).T)
 
 
 async def parse_vcf_to_record_columns(vcf_file, progress=print_progress):
