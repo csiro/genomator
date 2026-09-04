@@ -26,55 +26,59 @@
 # smaller in-distance than out-distance indicates membership leakage.
 #
 # Depends on Genomator_exec (genomator_mini), loaded earlier in the same
-# Pyodide session by PyodideService.  Genotypes are read through vcf_parsing;
-# vcfpy is still used to *write* the two half-VCFs, which it does well.
+# Pyodide session by PyodideService.  Genotypes are read through vcf_parsing.
+# Splitting the cohort is a matter of copying header lines through unchanged
+# and re-joining each data line's fixed columns with a sample-index subset of
+# its calls, so it is done the same way vcf_parsing reads: straight off the
+# raw bytes, not through vcfpy.  vcfpy allocates a Record and a Call per
+# sample per row, which is the same cost that made it too slow to read with,
+# and here it was worse: run with no `await sleep(0)` in the per-record loop
+# at all, so splitting a 780 sample exome VCF froze the tab for minutes.
 
 from asyncio import sleep
-from copy import deepcopy
 import math
 
 import numpy as np
-import vcfpy
 
-from vcf_parsing import parse_vcf_to_genotype_matrix
+from vcf_parsing import open_vcf, parse_vcf_to_genotype_matrix, PROGRESS_INTERVAL_RECORDS
 
 
 async def split_vcf_by_sample(input_vcf_file, out_a, out_b, seed=None):
-    reader = vcfpy.Reader.from_path(input_vcf_file)
-    samples = list(reader.header.samples.names)
-    num_samples = len(samples)
-    assert num_samples >= 4, (
-        "Need at least 4 samples in the input VCF to perform a split-half privacy evaluation"
-    )
-    rng = np.random.default_rng(seed)
-    order = rng.permutation(num_samples)
-    half = num_samples // 2
-    idx_a = sorted(order[:half].tolist())
-    idx_b = sorted(order[half:].tolist())
+    """Split a VCF's samples into two random disjoint halves, by column.
 
-    header_a = deepcopy(reader.header)
-    header_a.samples = vcfpy.SamplesInfos([samples[i] for i in idx_a])
-    header_b = deepcopy(reader.header)
-    header_b.samples = vcfpy.SamplesInfos([samples[i] for i in idx_b])
-
-    writer_a = vcfpy.Writer.from_path(out_a, header_a)
-    writer_b = vcfpy.Writer.from_path(out_b, header_b)
-
-    for record in reader:
-        calls_a = [deepcopy(record.calls[i]) for i in idx_a]
-        calls_b = [deepcopy(record.calls[i]) for i in idx_b]
-
-        record.calls = calls_a
-        record.update_calls(record.calls)
-        writer_a.write_record(record)
-
-        record.calls = calls_b
-        record.update_calls(record.calls)
-        writer_b.write_record(record)
-
-    reader.close()
-    writer_a.close()
-    writer_b.close()
+    Reads and writes raw bytes line by line: header lines are copied through
+    unchanged, and each data line's 9 fixed columns are re-joined with a
+    sample-index subset of its calls.  No genotype decoding is needed for
+    this, so it stays well clear of vcf_parsing's fixed-width fast path.
+    """
+    idx_a = idx_b = None
+    num_records = 0
+    with open_vcf(input_vcf_file) as handle, open(out_a, "wb") as fa, open(out_b, "wb") as fb:
+        for line in handle:
+            if line.startswith(b"##"):
+                fa.write(line)
+                fb.write(line)
+                continue
+            fields = line.rstrip(b"\r\n").split(b"\t")
+            prefix, calls = fields[:9], fields[9:]
+            if line.startswith(b"#CHROM"):
+                num_samples = len(calls)
+                assert num_samples >= 4, (
+                    "Need at least 4 samples in the input VCF to perform a split-half privacy evaluation"
+                )
+                rng = np.random.default_rng(seed)
+                order = rng.permutation(num_samples)
+                half = num_samples // 2
+                idx_a = sorted(order[:half].tolist())
+                idx_b = sorted(order[half:].tolist())
+            else:
+                assert idx_a is not None, "VCF file has no #CHROM header line"
+                num_records += 1
+            fa.write(b"\t".join(prefix + [calls[i] for i in idx_a]) + b"\n")
+            fb.write(b"\t".join(prefix + [calls[i] for i in idx_b]) + b"\n")
+            if num_records % PROGRESS_INTERVAL_RECORDS == 0:
+                await sleep(0)
+    assert idx_a is not None, "VCF file has no #CHROM header line"
     return len(idx_a), len(idx_b)
 
 
@@ -160,18 +164,45 @@ async def InDepth_privacy_metric_exec(
 
     in_distances = np.concatenate([in_dist_a, in_dist_b])
     out_distances = np.concatenate([out_dist_a, out_dist_b])
-    delta = out_distances - in_distances
+    n = len(in_distances)
 
-    mean_in = float(np.mean(in_distances))
-    mean_out = float(np.mean(out_distances))
-    se_delta = (
-        float(np.std(delta, ddof=1) / np.sqrt(len(delta))) if len(delta) > 1 else 0.0
+    print(
+        f"mean own-group distance: {float(np.mean(in_distances)):.1f}, "
+        f"mean other-group distance: {float(np.mean(out_distances)):.1f} "
+        f"(out of {real_a.shape[1]} positions)"
     )
 
-    score = 1.0 if mean_out == 0 else min(1.0, mean_in / mean_out)
-    uncertainty = 0.0 if mean_out == 0 else se_delta / mean_out
+    # Privacy score, matching the quadruplet metric's exact convention: for
+    # each real individual, does their own half's synthetic data sit closer
+    # ("in") or the other half's ("out")?  advantage = TPR - FPR of that one
+    # bit of evidence; a generator with no membership signal gives advantage
+    # 0 (score 1), one that always gives the real individual away gives
+    # advantage 1 (score 0).  Not clamped, for the same reason the quadruplet
+    # metric doesn't clamp: a small negative advantage from sampling noise is
+    # more honest than hiding it at the 1.0 ceiling.
+    p_in_closer = float(np.count_nonzero(in_distances < out_distances)) / n
+    p_out_closer = float(np.count_nonzero(out_distances < in_distances)) / n
+    advantage = p_in_closer - p_out_closer
+    advantage_variance = ((p_in_closer + p_out_closer) - advantage**2) / n
+    uncertainty = advantage_variance**0.5
 
-    result = format_with_uncertainty(score, uncertainty)
+    result = format_with_uncertainty(1 - advantage, uncertainty)
+
+    # Plain-language context for the score above: pool the two "guess which
+    # half this person came from" attacks (against synth_a and against
+    # synth_b) into one membership-inference attack accuracy. This is not
+    # part of the score itself, just an explanation of it.
+    member_scores = np.concatenate([in_dist_a, in_dist_b])
+    nonmember_scores = np.concatenate([out_dist_b, out_dist_a])
+    correct = np.count_nonzero(member_scores[:, None] < nonmember_scores[None, :])
+    tied = np.count_nonzero(member_scores[:, None] == nonmember_scores[None, :])
+    attack_accuracy = (correct + 0.5 * tied) / (len(member_scores) * len(nonmember_scores))
+    print(
+        f"For context: guessing which half a person belonged to by "
+        f"nearest-neighbor distance alone would be correct about "
+        f"{attack_accuracy * 100:.0f}% of the time (50% = no better than a coin flip)."
+    )
+
     print("indepth stage 4/4: done")
     print(f"RESULT:{result}")
     await sleep(0)
