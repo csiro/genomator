@@ -42,6 +42,14 @@ import numpy as np
 
 from vcf_parsing import open_vcf, parse_vcf_to_genotype_matrix, PROGRESS_INTERVAL_RECORDS
 
+# Blocking for the distance measurement, chosen to bound both memory and the
+# time spent between event-loop yields.  A block costs one float32 copy of
+# DISTANCE_BLOCK_SAMPLES real individuals, and computes that many rows of the
+# distance matrix; capping the cells too keeps a block's work roughly constant
+# however many synthetic genomes were generated.
+DISTANCE_BLOCK_SAMPLES = 32
+DISTANCE_BLOCK_CELLS = 3000
+
 
 async def split_vcf_by_sample(input_vcf_file, out_a, out_b, seed=None):
     """Split a VCF's samples into two random disjoint halves, by column.
@@ -84,17 +92,43 @@ async def split_vcf_by_sample(input_vcf_file, out_a, out_b, seed=None):
     return len(idx_a), len(idx_b)
 
 
+def hamming_block(block, others, sum_others):
+    """Hamming distance from each row of a float32 block to each row of others.
+
+    Genotypes are binary, so the number of differing positions is
+    sum(a) + sum(b) - 2 * a.b; the dot product counts the positions where both
+    are 1.  That turns the comparison into one matrix multiply.  The clip
+    guards float32 rounding taking an exact zero slightly negative.
+    """
+    dot = block @ others.T
+    return np.clip(np.sum(block, axis=1, keepdims=True) + sum_others - 2 * dot, 0, None)
+
+
 def pairwise_hamming(A, B):
-    A = A.astype(np.float32)
+    """Hamming distance between every row of A and every row of B."""
     B = B.astype(np.float32)
-    sum_a = np.sum(A, axis=1, keepdims=True)
+    return hamming_block(A.astype(np.float32), B, np.sum(B, axis=1, keepdims=True).T)
+
+
+async def nearest_neighbor_min_distance(A, B):
+    """Distance from each row of A to the closest row of B.
+
+    A is walked in blocks so that the float32 copy of it stays small (a whole
+    cohort half is ~130MB at exome scale) and so the event loop gets a turn
+    part way through: one unbroken call froze the tab for tens of seconds once
+    the synthetic cohort grew.  B is cast once and reused across the blocks.
+    """
+    B = B.astype(np.float32)
     sum_b = np.sum(B, axis=1, keepdims=True).T
-    dot = A @ B.T
-    return np.clip(sum_a + sum_b - 2 * dot, 0, None)
-
-
-def nearest_neighbor_min_distance(A, B):
-    return np.min(pairwise_hamming(A, B), axis=1)
+    block_rows = max(1, min(DISTANCE_BLOCK_SAMPLES, DISTANCE_BLOCK_CELLS // max(1, B.shape[0])))
+    distances = np.empty(A.shape[0])
+    for start in range(0, A.shape[0], block_rows):
+        block = A[start : start + block_rows].astype(np.float32)
+        distances[start : start + block.shape[0]] = np.min(
+            hamming_block(block, B, sum_b), axis=1
+        )
+        await sleep(0)
+    return distances
 
 
 def format_with_uncertainty(val, uncertainty):
@@ -159,10 +193,10 @@ async def InDepth_privacy_metric_exec(
         real_a.shape[1] == real_b.shape[1] == synth_a.shape[1] == synth_b.shape[1]
     ), "Split cohorts and their synthetic outputs should encode the same number of variant/haplotype dimensions"
 
-    in_dist_a = nearest_neighbor_min_distance(real_a, synth_a)
-    out_dist_a = nearest_neighbor_min_distance(real_a, synth_b)
-    in_dist_b = nearest_neighbor_min_distance(real_b, synth_b)
-    out_dist_b = nearest_neighbor_min_distance(real_b, synth_a)
+    in_dist_a = await nearest_neighbor_min_distance(real_a, synth_a)
+    out_dist_a = await nearest_neighbor_min_distance(real_a, synth_b)
+    in_dist_b = await nearest_neighbor_min_distance(real_b, synth_b)
+    out_dist_b = await nearest_neighbor_min_distance(real_b, synth_a)
 
     in_distances = np.concatenate([in_dist_a, in_dist_b])
     out_distances = np.concatenate([out_dist_a, out_dist_b])
