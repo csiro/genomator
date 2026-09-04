@@ -55,6 +55,8 @@ async def split_vcf_by_sample(input_vcf_file, out_a, out_b, seed=None):
     num_records = 0
     with open_vcf(input_vcf_file) as handle, open(out_a, "wb") as fa, open(out_b, "wb") as fb:
         for line in handle:
+            if not line.strip():
+                continue
             if line.startswith(b"##"):
                 fa.write(line)
                 fb.write(line)
