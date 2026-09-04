@@ -190,15 +190,12 @@ async def InDepth_privacy_metric_exec(
 
     result = format_with_uncertainty(1 - advantage, uncertainty)
 
-    # Plain-language context for the score above: pool the two "guess which
-    # half this person came from" attacks (against synth_a and against
-    # synth_b) into one membership-inference attack accuracy. This is not
-    # part of the score itself, just an explanation of it.
-    member_scores = np.concatenate([in_dist_a, in_dist_b])
-    nonmember_scores = np.concatenate([out_dist_b, out_dist_a])
-    correct = np.count_nonzero(member_scores[:, None] < nonmember_scores[None, :])
-    tied = np.count_nonzero(member_scores[:, None] == nonmember_scores[None, :])
-    attack_accuracy = (correct + 0.5 * tied) / (len(member_scores) * len(nonmember_scores))
+    # Plain-language context for the score above. The attack described below
+    # is the paired one the score already measures: shown one person, guess
+    # which half they came from by whether their own half's synthetic data is
+    # the closer of the two. Its accuracy is P(own closer) plus half the ties,
+    # which is exactly (1 + advantage) / 2.
+    attack_accuracy = (1 + advantage) / 2
     print(
         f"For context: guessing which half a person belonged to by "
         f"nearest-neighbor distance alone would be correct about "
