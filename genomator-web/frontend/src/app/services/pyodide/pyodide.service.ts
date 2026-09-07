@@ -54,8 +54,6 @@ export class PyodideService {
         PyodideService.pyodide.runPython(await (await fetch('assets/accuracy_metric_pyodide.py')).text());
         log_function("Loading in privacy metric evaluator...")
         PyodideService.pyodide.runPython(await (await fetch('assets/privacy_metric_pyodide.py')).text());
-        log_function("Loading in in-depth privacy metric evaluator...")
-        PyodideService.pyodide.runPython(await (await fetch('assets/indepth_privacy_metric_pyodide.py')).text());
         log_function("Pyodide loaded.")
       } else {
         log_function("Pyodide already loaded.")

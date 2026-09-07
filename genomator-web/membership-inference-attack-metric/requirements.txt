@@ -1,0 +1,10 @@
+click ~= 8.3.1
+numpy ~= 2.4.2
+pandas ~= 3.0.5
+python-sat
+tqdm ~= 4.70.0
+vcfpy ~= 0.13.8
+
+# For --tools crbm,wgan,rbm (see run_comparative_privacy_experiment.py) also:
+#     pip install -r requirements-torch.txt
+# genomator and markov (the default --tools) don't need it.

@@ -16,13 +16,6 @@ enum CalculateMode {
   InDepth = 'InDepth',
 }
 
-enum GenParamMode {
-  HighPrivacy = 'High Privacy',
-  Balanced = 'Balanced',
-  HighAccuracy = 'High Accuracy',
-  Advanced = 'Advanced',
-}
-
 @Component({
   host: { class: 'page-content' },
   selector: 'app-calculate-privacy-metric',
@@ -34,8 +27,6 @@ enum GenParamMode {
 export class CalculatePrivacyMetricComponent implements OnInit {
   protected CalculateMode = CalculateMode;
   protected mode: CalculateMode = CalculateMode.Accuracy;
-  protected GenParamMode = GenParamMode;
-  protected genMode: GenParamMode = GenParamMode.Balanced;
 
   protected form: any;
   protected inputFile: File | null = null;
@@ -89,29 +80,6 @@ export class CalculatePrivacyMetricComponent implements OnInit {
           Validators.pattern('[1-9][0-9]*'),
         ]),
       ),
-      number_of_data: new FormControl(
-        10,
-        Validators.compose([
-          Validators.required,
-          Validators.pattern('[1-9][0-9]*'),
-        ]),
-      ),
-      cluster_group_size: new FormControl(
-        5,
-        Validators.compose([
-          Validators.required,
-          Validators.pattern('[1-9][0-9]*'),
-        ]),
-      ),
-      exception_space: new FormControl(
-        0.5,
-        Validators.compose([Validators.required]),
-      ),
-      looseness: new FormControl(
-        0.5,
-        Validators.compose([Validators.required]),
-      ),
-      auto_looseness: new FormControl(true),
     });
 
     this.disableSubmit = true;
@@ -134,51 +102,10 @@ export class CalculatePrivacyMetricComponent implements OnInit {
         this.loading = false;
         this.disableSubmit = false;
       });
-    this.setGenMode(GenParamMode.Balanced);
   }
 
   setMode(mode: CalculateMode) {
     this.mode = mode;
-  }
-
-  setGenMode(mode: GenParamMode) {
-    this.genMode = mode;
-    const lockedControls = ['cluster_group_size', 'exception_space', 'looseness'];
-    switch (mode) {
-      case GenParamMode.HighAccuracy:
-        lockedControls.forEach((c) => this.form.get(c)?.disable());
-        this.form.patchValue({
-          cluster_group_size: 5,
-          exception_space: 0,
-          looseness: 0,
-          auto_looseness: true,
-        });
-        break;
-      case GenParamMode.Balanced:
-        lockedControls.forEach((c) => this.form.get(c)?.disable());
-        this.form.patchValue({
-          cluster_group_size: 5,
-          exception_space: 0.5,
-          looseness: 0.5,
-          auto_looseness: true,
-        });
-        break;
-      case GenParamMode.HighPrivacy:
-        lockedControls.forEach((c) => this.form.get(c)?.disable());
-        this.form.patchValue({
-          cluster_group_size: 10,
-          exception_space: 1,
-          looseness: 0.99,
-          auto_looseness: true,
-        });
-        break;
-      case GenParamMode.Advanced:
-        lockedControls.forEach((c) => this.form.get(c)?.enable());
-        this.form.patchValue({
-          auto_looseness: false,
-        });
-        break;
-    }
   }
 
   // Prevent non-numeric keypresses to satisfy CSP (no inline handlers)
@@ -235,12 +162,6 @@ export class CalculatePrivacyMetricComponent implements OnInit {
     if (trialMatch) {
       this.progress =
         (parseInt(trialMatch[1], 10) * 100.0) / parseInt(trialMatch[2], 10);
-      return;
-    }
-    const stageMatch = s.match(/^indepth stage (\d+)\/(\d+)/);
-    if (stageMatch) {
-      this.progress =
-        (parseInt(stageMatch[1], 10) * 100.0) / parseInt(stageMatch[2], 10);
     }
   }
 
@@ -249,8 +170,6 @@ export class CalculatePrivacyMetricComponent implements OnInit {
       await this.runTwoFileMetric('Accuracy_metric_exec', 'accuracyTrials', 'slices');
     } else if (this.mode === CalculateMode.Privacy) {
       await this.runTwoFileMetric('Privacy_metric_exec', 'privacyTrials', 'degree');
-    } else {
-      await this.runInDepthMetric();
     }
   }
 
@@ -319,37 +238,6 @@ export class CalculatePrivacyMetricComponent implements OnInit {
         'metric_generated.vcf',
         formValue[trialsControl],
         formValue[secondParamControl],
-      ]);
-    });
-  }
-
-  private async runInDepthMetric() {
-    if (!this.pyodideService.isLoaded()) {
-      return;
-    }
-    if (this.inputFile === null) {
-      this.toastr.error(
-        'Please select the input VCF file.',
-        'Missing File',
-      );
-      return;
-    }
-    this.form.markAllAsTouched();
-    if (this.form.invalid) return;
-
-    const formValue = this.form.getRawValue();
-    const inputFile = this.inputFile;
-    await this.withStatusHandling(async () => {
-      this.pyodideService.loadFile(
-        new Uint8Array(await inputFile.arrayBuffer()),
-        'indepth_cohort_input.vcf',
-      );
-      return this.pyodideService.execute('InDepth_privacy_metric_exec', [
-        'indepth_cohort_input.vcf',
-        formValue.number_of_data,
-        formValue.exception_space,
-        formValue.cluster_group_size,
-        formValue.auto_looseness ? null : formValue.looseness,
       ]);
     });
   }

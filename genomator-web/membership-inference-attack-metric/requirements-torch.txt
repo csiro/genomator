@@ -1,0 +1,10 @@
+# Optional: only needed for --tools crbm,wgan,rbm on
+# run_comparative_privacy_experiment.py. genomator and markov (this tool's
+# defaults) work fine without installing this file.
+#
+# CPU-only wheel (much smaller/faster than the default PyPI build):
+#   pip install -r requirements.txt
+#   pip install -r requirements-torch.txt --index-url https://download.pytorch.org/whl/cpu
+torch ~= 2.14.0
+h5py ~= 3.16.0
+matplotlib ~= 3.11.1
