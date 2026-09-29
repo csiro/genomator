@@ -1,0 +1,8 @@
+setuptools<81
+click==8.4.2
+cyvcf2==0.34.0
+numpy==2.5.1
+python-sat==1.9.dev7
+stopit==1.1.2
+tqdm==4.70.0
+vcfpy==0.14.2

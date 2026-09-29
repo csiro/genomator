@@ -1,7 +1,13 @@
-# In-Depth Privacy Metric — local runner
+# In-Depth Privacy Metric — local runner (archived)
+
+**Archived.** The Calculate tab no longer links here — it now points to
+`genomator-web/privacy-evaluation/`, a broader multi-method privacy/utility
+evaluation package (DCR/NNDR, PRIVET, PRISM-G). This folder is kept for
+reference/history rather than deleted outright, but isn't the recommended
+tool going forward.
 
 Runs the same split-cohort / regenerate / compare privacy check as the
-Calculate tab's "In-Depth Privacy Metric", outside the browser
+Calculate tab's former "In-Depth Privacy Metric", outside the browser
 (`run_indepth_locally.py`, Genomator only), plus a multi-tool variant that
 compares Genomator against baseline generators from the original paper
 (`run_comparative_privacy_experiment.py`, see below).

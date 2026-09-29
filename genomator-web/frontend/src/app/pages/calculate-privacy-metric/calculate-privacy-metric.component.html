@@ -21,12 +21,13 @@
               data, using unique-combination reproduction rates.
             </li>
             <li>
-              <b>In-Depth Privacy Metric</b> - A more thorough membership-leakage
-              check, done by comparing Genomator against other synthetic data
-              generation tools rather than scoring it in isolation. This
-              comparison needs more compute than a browser tab can offer, so
-              it runs as a downloadable local script instead of on this page
-              &mdash; see that tab for instructions.
+              <b>In-Depth Privacy Metric</b> - A research-grade privacy/utility
+              evaluation: DCR/NNDR (distance-to-closest-record) as the privacy
+              metric, plus MAF/LD fidelity, across a sweep of generation
+              parameters. This needs multiple Python environments and an
+              external dependency well beyond what a browser tab can offer,
+              so it runs as a downloadable local toolkit instead of on this
+              page &mdash; see that tab for instructions.
             </li>
           </ul>
 
@@ -35,7 +36,7 @@
             <strong>your own computer</strong> in your web browser; data is
             <strong>never</strong> transmitted outside your device. The
             In-Depth Privacy Metric also runs only on your own computer, as a
-            local script rather than in the browser.
+            downloadable local toolkit rather than in the browser.
           </div>
         </div>
       </div>
@@ -125,58 +126,60 @@
 
             <div *ngIf="mode === CalculateMode.InDepth">
               <p>
-                The in-depth privacy metric is a membership-inference-style
-                check: it splits a real cohort in half, regenerates synthetic
-                data from each half, and asks whether a real individual's own
-                half sits detectably closer than the other half's. The
-                original Genomator paper used exactly this kind of check to
-                show Genomator's privacy advantage &mdash;
-                <strong>by comparing it against other synthetic data
-                generation tools</strong> (a Markov-chain baseline, and
-                deep-learning baselines such as CRBM/WGAN/RBM), not by
-                reporting Genomator's score in isolation. A score on its own,
-                without that comparison, is easy to misread.
+                This is a more thorough, research-grade privacy/utility
+                evaluation, run across a sweep of generation parameters
+                rather than a single result:
               </p>
+              <ul class="bullet-list list-unstyled pl-0">
+                <li>
+                  <b>DCR / NNDR</b> &mdash; distance-to-closest-record: how
+                  much closer synthetic individuals sit to the real training
+                  set than to a held-out real set, flagging likely
+                  memorization.
+                </li>
+                <li>
+                  <b>MAF / LD fidelity</b> &mdash; how closely synthetic data
+                  reproduces real allele-frequency and linkage-disequilibrium
+                  structure, reported alongside privacy since the two are in
+                  tension by construction.
+                </li>
+              </ul>
               <p>
-                Genomator's SAT-based approach is lightweight enough to run
-                in a browser tab, which is why the rest of this page can run
-                entirely client-side. The baseline tools it needs to be
-                compared against are not &mdash; the deep-learning baselines
-                in particular need meaningfully more compute and memory than
-                a browser tab can offer. So this comparison runs as a local
-                script instead of in the browser.
+                This needs meaningfully more than a browser tab can offer: two
+                separate Python/conda environments, plus a cloned copy of
+                Genomator (patched for reproducible seeding). So it runs as a
+                downloadable local toolkit instead of on this page.
               </p>
               <div class="alert alert-info">
                 <strong>Run it locally:</strong>
                 <ol class="mb-0">
                   <li>
-                    Get the scripts from the
+                    Get the code from the
                     <a href="https://github.com/csiro/genomator" target="_blank" rel="noopener">Genomator GitHub repository</a>,
-                    under <code>genomator-web/membership-inference-attack-metric/</code>.
+                    under <code>genomator-web/privacy-evaluation/</code>.
                   </li>
                   <li>
-                    Follow the setup steps in that folder's <code>README.md</code>
-                    (create a virtual environment, then
-                    <code>pip install -r requirements.txt</code>).
+                    Follow that folder's <code>README.md</code> in full
+                    &mdash; it covers setting up the two conda environments,
+                    cloning/patching Genomator, and providing your own real
+                    cohort VCF (none of that is bundled here).
                   </li>
                   <li>
-                    Run the comparison against your real cohort:
-                    <pre class="code-block mt-2 mb-2"><code>python3 run_comparative_privacy_experiment.py --input your_real_data.vcf --tools genomator,markov</code></pre>
-                  </li>
-                  <li>
-                    Optionally add the deep-learning baselines
-                    (<code>crbm</code>, <code>wgan</code>, <code>rbm</code>) to
-                    <code>--tools</code> once you've installed PyTorch as
-                    described in the README &mdash; they're slower and need
-                    more memory, so they're left out by default.
+                    Run the DCR/NNDR privacy score and MAF/LD utility check
+                    against your parameter sweep; each has its own script
+                    under <code>code/</code> (<code>dcr-nndr/</code>,
+                    <code>compute_utility.py</code>), plus
+                    <code>code/reporting/</code> to aggregate and plot results
+                    across a full sweep.
                   </li>
                 </ol>
               </div>
               <p class="mb-0">
-                The script prints both the mean and median own-half vs.
-                other-half distance for every tool you run, side by side, so
-                you can judge Genomator's relative standing yourself &mdash;
-                the same comparison the original paper made.
+                This replaces an earlier, simpler in-browser-adjacent check
+                (comparing Genomator against Markov/CRBM/WGAN/RBM baselines on
+                a single split); that tool is archived, not deleted, at
+                <code>genomator-web/archived-privacy-metric/</code> for
+                reference.
               </p>
             </div>
 
