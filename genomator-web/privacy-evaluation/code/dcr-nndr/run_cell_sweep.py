@@ -15,21 +15,27 @@ SPLIT_SEEDS = [101, 102, 103, 104, 105]
 GEN_SEEDS = [201, 202, 203, 204, 205]
 
 
-def run_one(py, genomator_bin, N, Z, L, no_biasing, outdir, splits_dir, split_seed, gen_seed):
+def run_one(genomator_py, py, genomator_src, N, Z, L, no_biasing, outdir, splits_dir, split_seed, gen_seed):
+    # score_one_dcr.py now imports genomator directly (generate_genomes()) rather than
+    # shelling out to an installed CLI, so *it* has to run under an interpreter with
+    # genomator's own deps (cyvcf2, python-sat, vcfpy, ...) importable -- that's
+    # genomator_py, launching the subprocess below. It still separately shells out to
+    # compute_dcr_scores.py for scoring, via its own --py, same as before (typically a
+    # different "metrics" env with scipy/scikit-learn, not genomator's deps).
     cmd = [
-        py, SCORE_SCRIPT,
+        genomator_py, SCORE_SCRIPT,
         "--N", str(N), "--Z", str(Z), "--L", str(L),
         "--split-seed", str(split_seed), "--gen-seed", str(gen_seed),
         "--outdir", outdir,
         "--splits-dir", splits_dir,
         "--keep-synth", "--quiet",
+        "--py", py,
     ]
+    if genomator_src:
+        cmd += ["--genomator-src", genomator_src]
     if no_biasing:
         cmd.append("--no-biasing")
-    env = dict(os.environ)
-    env["PY"] = py
-    env["GENOMATOR_BIN"] = genomator_bin
-    r = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    r = subprocess.run(cmd, capture_output=True, text=True)
     return split_seed, gen_seed, r.returncode, r.stdout, r.stderr
 
 
@@ -51,13 +57,20 @@ def main(argv=None):
         help=f"default: {DEFAULT_SPLITS_DIR} (shared across every cell)",
     )
     ap.add_argument("--workers", type=int, default=6)
-    ap.add_argument("--py", default=None, help="python with numpy+scipy (default: $PY or this interpreter)")
-    ap.add_argument("--genomator-bin", dest="genomator_bin", default=None,
-                     help="genomator CLI (default: $GENOMATOR_BIN or genomator on PATH)")
+    ap.add_argument("--genomator-py", dest="genomator_py", default=None,
+                     help="python that has genomator's own deps (cyvcf2, python-sat, vcfpy, ...) "
+                          "importable -- launches score_one_dcr.py itself "
+                          "(default: $GENOMATOR_PY or this interpreter)")
+    ap.add_argument("--py", default=None,
+                     help="python with numpy+scipy -- used by score_one_dcr.py to run "
+                          "compute_dcr_scores.py (default: $PY or this interpreter)")
+    ap.add_argument("--genomator-src", dest="genomator_src", default=None,
+                     help="path to the genomator/ package, passed through to score_one_dcr.py "
+                          "(default: that script's own sibling-folder default)")
     args = ap.parse_args(argv)
 
+    genomator_py = args.genomator_py or os.environ.get("GENOMATOR_PY") or sys.executable
     py = args.py or os.environ.get("PY") or sys.executable
-    genomator_bin = args.genomator_bin or os.environ.get("GENOMATOR_BIN", "genomator")
     splits_dir = args.splits_dir  # argparse default is already the real path (see add_argument above)
 
     nb = "_nb" if args.no_biasing else ""
@@ -73,7 +86,7 @@ def main(argv=None):
     with ProcessPoolExecutor(max_workers=args.workers) as ex:
         futs = {
             ex.submit(
-                run_one, py, genomator_bin, args.N, args.Z, args.L, args.no_biasing,
+                run_one, genomator_py, py, args.genomator_src, args.N, args.Z, args.L, args.no_biasing,
                 outdir, splits_dir, s, g,
             ): (s, g)
             for s, g in jobs

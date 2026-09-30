@@ -1,25 +1,24 @@
 # Genomator privacy evaluation
 
-We evaluate [Genomator](https://github.com/aehrc/genomator)'s privacy performance
+We evaluate [Genomator](../../genomator)'s privacy performance
 across a sweep of `(N, Z, L)` parameter settings, using DCR/NNDR (distance-to-closest-record
 / nearest-neighbor distance ratio) as the privacy metric, plus MAF/LD fidelity metrics.
 
 **What's in this folder vs. what you need to add.** Only `code/` and `env/`
 (the evaluation scripts and their pinned dependency lists) are checked into
-this repo. The `data/` (real source VCF, train/holdout splits, generated
-synthetic VCFs) and `library/` (a vendored `genomator` clone) directories the
-rest of this README describes are **not** included here — set them up
-yourself following "Environment setup" and "Generating reproducible
-synthetic genome data" below, using your own real cohort. Note in particular
-that `library/genomator` needs the `--seed` patch described below applied to
-a clone of [aehrc/genomator](https://github.com/aehrc/genomator); that patch
-itself isn't included here either, only the evaluation code that assumes
-it's present.
+this repo. The `data/` directory (real source VCF, train/holdout splits,
+generated synthetic VCFs) this README describes is **not** included here —
+set it up yourself following "Environment setup" and "Generating
+reproducible synthetic genome data" below, using your own real cohort.
+Genomator itself needs no separate setup: `code/dcr-nndr/score_one_dcr.py`
+imports it directly from `genomator/` at the root of this same repo (see
+"Generating reproducible synthetic genome data" below) — no external clone,
+no patch to apply, no PyPI package to install.
 
 This is a heavier, research-grade evaluation pipeline than the Calculate
 tab's previous "In-Depth Privacy Metric" (now archived at
-`genomator-web/archived-privacy-metric/`) — two separate conda environments,
-an external cloned dependency, and no single one-command "just run it" path.
+`genomator-web/archived-privacy-metric/`) — two separate conda environments
+and no single one-command "just run it" path.
 
 ## Repository structure
 
@@ -46,36 +45,38 @@ code/
 env/
   requirements-genomator.txt
   requirements-metrics.txt
-
-library/
-  genomator/                    cloned copy of genomator (pip-installable, see below)
 ```
 
-- **genomator** -- [github.com/aehrc/genomator](https://github.com/aehrc/genomator), cloned into
-  `library/genomator/`, installed with `pip install library/genomator/genomator`.
-
-The clone has its own nested `.git/` stripped -- it's a plain vendored source snapshot
-checked into this repo, not a live checkout.
+Genomator itself is not vendored anywhere under this folder -- `score_one_dcr.py` imports
+it directly from `genomator/` at the repo root (a sibling of `genomator-web/`), the same
+source the rest of this repo (and the Calculate tab's Generate/Accuracy/Privacy metrics)
+uses. See "Generating reproducible synthetic genome data" below for how that import works
+and why reproducibility doesn't need any change to genomator's own code.
 
 ## Environment setup
 
-```bash
-# only needed if library/ is missing or you want to refresh it from upstream -- a fresh clone of
-# this repo already has library/genomator/ checked in, so normally skip straight
-# to the conda/pip steps below
-git clone https://github.com/aehrc/genomator.git library/genomator
+Two conda environments, split by which scripts actually import what:
 
+- **`genomator`** -- runs `score_one_dcr.py`/`run_cell_sweep.py` themselves. These import
+  `genomator` (needing `cyvcf2`, `python-sat`, `vcfpy`, `click`, `tqdm`, `stopit`) directly,
+  in-process, to generate synthetic data -- see `env/requirements-genomator.txt`.
+- **`metrics`** -- used only for the actual scoring scripts (`compute_dcr_scores.py`,
+  `compute_utility.py`; numpy/scipy/scikit-learn) -- see `env/requirements-metrics.txt`.
+  `score_one_dcr.py` launches these as a separate subprocess under this environment's own
+  interpreter, so it can stay a distinct environment from `genomator` above even though
+  `score_one_dcr.py` itself now runs under `genomator`.
+
+```bash
 conda create -n genomator python=3.12 -y && conda activate genomator
 pip install -r env/requirements-genomator.txt
-pip install library/genomator/genomator
 conda deactivate
 
 conda create -n metrics python=3.12 -y && conda activate metrics
 pip install -r env/requirements-metrics.txt
 conda deactivate
 
+export GENOMATOR_PY=$(conda run -n genomator which python)
 export PY=$(conda run -n metrics which python)
-export GENOMATOR_BIN=$(conda run -n genomator which genomator)
 ```
 
 ## Generating reproducible synthetic genome data
@@ -92,27 +93,50 @@ This repo parametrizes a Genomator run by three swept values plus two seeds, for
 - **`split_seed`** (101-105 in this repo) -- seeds `split_train_holdout.py`'s `RandomState`, fixing
   which real samples land in train vs. holdout. Every swept cell shares the same 5 splits, so
   results line up by `(paramtag, split_seed, gen_seed)`.
-- **`gen_seed`** -- passed to Genomator as `--seed`, fixing the SAT solver's synthetic draw for
-  that split's train set. `--tasks=1` is always passed alongside it and is required for this to
-  actually be reproducible -- Genomator seeds Python's global `random`/`numpy.random` state once,
-  at the top of generation, and every genome in the batch draws from that one shared stream in a
-  single process.
+- **`gen_seed`** -- fixes the SAT solver's synthetic draw for that split's train set.
 
-  **This `--seed` option does not exist upstream.** Genomator's public source
-  ([github.com/aehrc/genomator](https://github.com/aehrc/genomator)) has no seeding in its
-  generation path. `library/genomator/` in this repo is patched (`genomator/generate.py` +
-  `scripts/genomator`) to add real `--seed` support.
+  Genomator's own CLI (`genomator/scripts/genomator`) has no `--seed` option, and we didn't
+  want to add one there or maintain a patched fork just for this. Instead, `score_one_dcr.py`
+  imports `genomator` directly (`from genomator import generate_genomes, ...`, with
+  `genomator/` — the repo root's own copy — added to `sys.path`) and calls
+  `random.seed(gen_seed)` / `np.random.seed(gen_seed)` itself, once, immediately before that
+  one call. `generate_genomes()` reads both as plain global state throughout generation (this
+  was confirmed by reading `genomator/genomator/generate.py`, not assumed), so seeding them in
+  the caller is enough — nothing about genomator's own code changes. `tasks=1` is passed
+  alongside for the same reason it always was: `tasks>1` spreads generation over a
+  multiprocessing pool, whose worker processes don't inherit a coordinated sub-seed from this
+  one, so anything above 1 would silently break the reproducibility this depends on.
+
+  Verified directly, not just argued for: running the same `(paramtag, split_seed, gen_seed)`
+  twice produces byte-identical synthetic VCFs (same SHA-256), and changing just `gen_seed`
+  changes the output.
+
+  A few generation parameters this repo has never overridden (`indexation_bits`,
+  `difference_samples`, `solver_name`, `no_smart_clustering`, `cluster_information_file`,
+  `max_restarts`, `del_info_field`) used to fall through to `scripts/genomator`'s own Click
+  option defaults, which for a couple of these differ from `generate_genomes()`'s own
+  Python-level defaults (e.g. `indexation_bits` is 8 at the CLI layer vs. 12 as the function's
+  own default). Rather than pick a number and duplicate it here, `score_one_dcr.py` reads
+  these straight from `scripts/genomator`'s registered Click defaults at run time (see
+  `_genomator_cli_defaults()`), so this stays in sync automatically if those defaults ever
+  change instead of silently drifting from what the CLI would have used. Every replicate's
+  result JSON records the actual values used, under `run_config.genomator`, for exactly this
+  reason.
+
+  If you need to point at a different `genomator/` checkout entirely (not the one at this
+  repo's root), set `GENOMATOR_SRC` or pass `--genomator-src`.
 
 Example to generate (and score) one replicate end-to-end with `(N=150, Z=1.5, L=0.99, no-biasing)`, split_seed=101, gen_seed=201:
 
 ```bash
-conda activate metrics
+conda activate genomator
 python code/dcr-nndr/score_one_dcr.py \
   --N 150 --Z 1.5 --L 0.99 --no-biasing \
   --split-seed 101 --gen-seed 201 \
   --source data/805_SNP_1000G_real.vcf \
   --outdir data/synthetic_data/N150_Z1.5_L0.99_nb \
   --splits-dir data/splits \
+  --py "$PY" \
   --keep-synth
 ```
 
@@ -150,10 +174,12 @@ both sides for the same cell is the point of this repo's layout.
 ### Per-replicate compute (one `(paramtag, split_seed, gen_seed)`)
 
 ```bash
-# DCR / NNDR
+# DCR / NNDR -- run under the genomator env; --py points it at metrics for scoring
+conda activate genomator
 python code/dcr-nndr/score_one_dcr.py \
   --N 150 --Z 1.5 --L 0.99 --no-biasing --split-seed 101 --gen-seed 201 \
-  --outdir data/synthetic_data/N150_Z1.5_L0.99_nb --splits-dir data/splits --keep-synth
+  --outdir data/synthetic_data/N150_Z1.5_L0.99_nb --splits-dir data/splits \
+  --py "$PY" --keep-synth
 
 # MAF / LD utility, same replicate
 python code/compute_utility.py \
@@ -195,7 +221,10 @@ python code/dcr-nndr/run_cell_sweep.py --N 150 --Z 1.5 --L 0.99 --no-biasing --w
 # -> data/synthetic_data/N150_Z1.5_L0.99_nb/syn/*.vcf             (25 files -- always passes --keep-synth)
 ```
 
-Same `PY`/`GENOMATOR_BIN` resolution as `score_one_dcr.py` (env var, or `--py`/`--genomator-bin`).
+`run_cell_sweep.py` itself needs no special environment (it only launches subprocesses),
+but launches each replicate's `score_one_dcr.py` under `$GENOMATOR_PY`/`--genomator-py`
+(default: whatever interpreter you ran `run_cell_sweep.py` with), passing along
+`$PY`/`--py` for that replicate's own scoring step, and `--genomator-src` if you set one.
 `--outdir` defaults to `data/synthetic_data/<paramtag>`, matching the standard layout; `--workers`
 defaults to 6. Any replicate whose result JSON already exists is skipped (same idempotency as
 `score_one_dcr.py`), so re-running after a partial failure only redoes what's missing.
