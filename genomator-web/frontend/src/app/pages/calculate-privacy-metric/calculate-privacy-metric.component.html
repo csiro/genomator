@@ -20,23 +20,12 @@
               from the original data could be inferred from the synthetic
               data, using unique-combination reproduction rates.
             </li>
-            <li>
-              <b>In-Depth Privacy Metric</b> - A research-grade privacy/utility
-              evaluation: DCR/NNDR (distance-to-closest-record) as the privacy
-              metric, plus MAF/LD fidelity, across a sweep of generation
-              parameters. This needs multiple Python environments and an
-              external dependency well beyond what a browser tab can offer,
-              so it runs as a downloadable local toolkit instead of on this
-              page &mdash; see that tab for instructions.
-            </li>
           </ul>
 
           <div class="alert alert-success">
-            The Accuracy and Privacy metrics above execute entirely on
+            Both metrics above execute entirely on
             <strong>your own computer</strong> in your web browser; data is
-            <strong>never</strong> transmitted outside your device. The
-            In-Depth Privacy Metric also runs only on your own computer, as a
-            downloadable local toolkit rather than in the browser.
+            <strong>never</strong> transmitted outside your device.
           </div>
         </div>
       </div>
@@ -85,7 +74,7 @@
 
           <div *ngIf="!loading">
             <div class="mb-3 row">
-              <div class="col-12 col-xl-4 mb-2 mb-xl-0">
+              <div class="col-12 col-xl-6 mb-2 mb-xl-0">
                 <button
                   type="button"
                   class="btn btn-primary1 w-100"
@@ -95,7 +84,7 @@
                   Run Accuracy Metric
                 </button>
               </div>
-              <div class="col-12 col-xl-4 mb-2 mb-xl-0">
+              <div class="col-12 col-xl-6 mb-2 mb-xl-0">
                 <button
                   type="button"
                   class="btn btn-primary1 w-100"
@@ -103,16 +92,6 @@
                   (click)="setMode(CalculateMode.Privacy)"
                 >
                   Run Privacy Metric
-                </button>
-              </div>
-              <div class="col-12 col-xl-4">
-                <button
-                  type="button"
-                  class="btn btn-primary1 w-100"
-                  [class.active]="mode === CalculateMode.InDepth"
-                  (click)="setMode(CalculateMode.InDepth)"
-                >
-                  Run In-Depth Privacy Metric
                 </button>
               </div>
             </div>
@@ -124,123 +103,7 @@
               trials below if you just want a quick estimate.
             </div>
 
-            <div *ngIf="mode === CalculateMode.InDepth">
-              <p>
-                This is a more thorough, research-grade privacy/utility
-                evaluation, run across a sweep of generation parameters
-                rather than a single result:
-              </p>
-              <ul class="bullet-list list-unstyled pl-0">
-                <li>
-                  <b>DCR / NNDR</b> &mdash; distance-to-closest-record: how
-                  much closer synthetic individuals sit to the real training
-                  set than to a held-out real set, flagging likely
-                  memorization.
-                </li>
-                <li>
-                  <b>MAF / LD fidelity</b> &mdash; how closely synthetic data
-                  reproduces real allele-frequency and linkage-disequilibrium
-                  structure, reported alongside privacy since the two are in
-                  tension by construction.
-                </li>
-              </ul>
-              <p>
-                This needs meaningfully more than a browser tab can offer:
-                two separate Python/conda environments, and a full sweep
-                across many parameter settings rather than one result. So it
-                runs as a downloadable local toolkit instead of on this page.
-                You can still generate the synthetic data itself right here
-                on the <a routerLink="/genomic">Generate</a> tab, the same way
-                as always &mdash; only the split-cohort setup and the privacy
-                scoring happen locally.
-              </p>
-              <div class="alert alert-warning">
-                <strong>The one rule this depends on:</strong> whatever
-                synthetic VCF you score must have been generated from
-                <strong>only the train half</strong> of your real cohort
-                (step 1 below), never your full real dataset. The metric
-                works by comparing how close synthetic data sits to
-                individuals the generator saw (train) versus a held-out set
-                it never saw (holdout) &mdash; if the "holdout" half was
-                actually part of generation too, that comparison stops
-                meaning anything, silently.
-              </div>
-              <div class="alert alert-info">
-                <strong>Step 1 &mdash; split your real cohort (local, one command):</strong>
-                <p class="mb-2 mt-2">
-                  Get the code from the
-                  <a href="https://github.com/csiro/genomator" target="_blank" rel="noopener">Genomator GitHub repository</a>,
-                  under <code>genomator-web/privacy-evaluation/</code>, and
-                  follow that folder's <code>README.md</code> to set up its
-                  two conda environments (no separate Genomator install is
-                  needed &mdash; the toolkit imports it straight from this
-                  same repository). Then split your real VCF into a train
-                  half and a holdout half it'll never see:
-                </p>
-                <pre class="code-block mt-2 mb-2"><code>python code/split_train_holdout.py your_real_data.vcf \
-  --train_frac 0.5 --seed 101 \
-  --out_train data/splits/split_101/train.vcf \
-  --out_holdout data/splits/split_101/holdout.vcf \
-  --out_audit_json data/splits/split_101/split_audit.json</code></pre>
-              </div>
-              <div class="alert alert-info">
-                <strong>Step 2 &mdash; generate synthetic data here, from the train half only:</strong>
-                <p class="mb-0 mt-2">
-                  Go to the <a routerLink="/genomic">Generate</a> tab and
-                  upload <code>data/splits/split_101/train.vcf</code> from
-                  step 1 &mdash; not your original full VCF, and not the
-                  holdout file. Its N/Z/L fields map onto this evaluation
-                  toolkit's own parameter names directly: "Choose a Cluster
-                  Group Size (ie. N)" is <code>N</code>, "How much should
-                  rare pairs be attenuated? (ie. Z&hellip;)" is
-                  <code>Z</code>, "How much looseness should the process
-                  involve?" is <code>L</code>, and "How many Synthetic Data
-                  Points?" is how many synthetic samples you'll be scoring.
-                  Generate, then download the resulting VCF.
-                </p>
-              </div>
-              <div class="alert alert-info">
-                <strong>Step 3 &mdash; score the downloaded VCF (local):</strong>
-                <p class="mb-2 mt-2">
-                  Back in <code>genomator-web/privacy-evaluation/</code>,
-                  point <code>--synthetic-vcf</code> at the file you just
-                  downloaded instead of generating one locally:
-                </p>
-                <pre class="code-block mt-2 mb-2"><code>python code/dcr-nndr/score_one_dcr.py \
-  --N 20 --Z 0.5 --L 0.6 \
-  --split-seed 101 --gen-seed 1 \
-  --source your_real_data.vcf \
-  --splits-dir data/splits \
-  --outdir data/synthetic_data/webgen_N20_Z0.5_L0.6 \
-  --synthetic-vcf ~/Downloads/your_generate_tab_output.vcf \
-  --py "$PY" --keep-synth</code></pre>
-                <p class="mb-0">
-                  Set <code>--N</code>/<code>--Z</code>/<code>--L</code> to
-                  whatever you actually used in step 2 (they're recorded as
-                  a label here, not re-applied &mdash; nothing gets
-                  regenerated); <code>--gen-seed</code> just tells apart
-                  multiple downloaded files scored against the same split.
-                  See the README's "Using synthetic data from the web
-                  Generate tab" section for the full walkthrough, including
-                  environment setup.
-                </p>
-              </div>
-              <p class="mb-0">
-                Prefer to skip the website step entirely and generate
-                locally too, e.g. for a full automated parameter sweep? The
-                same README also covers running Genomator locally end to
-                end via <code>score_one_dcr.py</code> without
-                <code>--synthetic-vcf</code>, and <code>run_cell_sweep.py</code>
-                for sweeping many parameter combinations at once. This
-                replaces an earlier, simpler in-browser-adjacent check
-                (comparing Genomator against Markov/CRBM/WGAN/RBM baselines
-                on a single split); that tool is archived, not deleted, at
-                <code>genomator-web/archived-privacy-metric/</code> for
-                reference.
-              </p>
-            </div>
-
-            <form *ngIf="mode !== CalculateMode.InDepth" [formGroup]="form" class="needs-validation" novalidate>
+            <form [formGroup]="form" class="needs-validation" novalidate>
               <div class="mb-3 row">
                 <label for="inputFilePicker" class="col-sm-3 col-form-label">
                   <strong>Input VCF file:</strong></label
@@ -480,7 +343,7 @@
               </div>
             </form>
 
-            <div *ngIf="!disableLog && mode !== CalculateMode.InDepth" aria-live="polite">
+            <div *ngIf="!disableLog" aria-live="polite">
               <hr />
               Status:
               <div

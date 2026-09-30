@@ -13,7 +13,6 @@ import { ToastrService } from 'ngx-toastr';
 enum CalculateMode {
   Accuracy = 'Accuracy',
   Privacy = 'Privacy',
-  InDepth = 'InDepth',
 }
 
 @Component({
